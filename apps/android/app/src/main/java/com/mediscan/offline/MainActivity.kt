@@ -1,8 +1,16 @@
 package com.mediscan.offline
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +28,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -29,22 +38,31 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import com.mediscan.offline.domain.CapturePanelType
+import com.mediscan.offline.domain.nextIncompleteStepIndex
 import com.mediscan.offline.domain.CapturedPanel
+import com.mediscan.offline.domain.upsertCapturedPanel
 import com.mediscan.offline.ui.theme.MediScanTheme
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -107,6 +125,7 @@ private val panelSaver = listSaver<CapturedPanel, String>(
 
 @Composable
 private fun OfflineApp() {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val capturedPanels = rememberSaveable(saver = listSaver(
         save = { panels -> panels.flatMap(panelSaver::save) },
         restore = { saved ->
@@ -116,28 +135,84 @@ private fun OfflineApp() {
         mutableStateListOf<CapturedPanel>()
     }
     var selectedStepIndex by rememberSaveable { mutableStateOf(0) }
+    var pendingStepType by rememberSaveable { mutableStateOf<String?>(null) }
+    var pendingCaptureUri by rememberSaveable { mutableStateOf<String?>(null) }
+    var cameraMessage by rememberSaveable { mutableStateOf<String?>(null) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) {
+            val panelTypeName = pendingStepType ?: return@rememberLauncherForActivityResult
+            val panelType = CapturePanelType.valueOf(panelTypeName)
+            val outputUri = createCaptureUri(context, panelType)
+            pendingCaptureUri = outputUri.toString()
+        } else {
+            cameraMessage = "Camera permission is required to capture packet panels offline."
+            pendingStepType = null
+            pendingCaptureUri = null
+        }
+    }
+
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture(),
+    ) { success ->
+        val panelTypeName = pendingStepType
+        val captureUri = pendingCaptureUri
+        if (success && panelTypeName != null && captureUri != null) {
+            val panelType = CapturePanelType.valueOf(panelTypeName)
+            val panelName = guidedCaptureOrder.first { it.panelType == panelType }.title
+            val updatedPanels = upsertCapturedPanel(
+                capturedPanels,
+                CapturedPanel(
+                    localUri = captureUri,
+                    panelType = panelType,
+                    panelName = panelName,
+                ),
+            )
+            capturedPanels.clear()
+            capturedPanels.addAll(updatedPanels)
+            selectedStepIndex = nextIncompleteStepIndex(
+                requiredOrder = guidedCaptureOrder.map { it.panelType },
+                panels = capturedPanels,
+                currentIndex = selectedStepIndex,
+            )
+            cameraMessage = "${panelType.label} captured locally."
+        } else if (captureUri != null) {
+            context.contentResolver.delete(Uri.parse(captureUri), null, null)
+            cameraMessage = "Capture cancelled. You can try the same step again."
+        }
+        pendingStepType = null
+        pendingCaptureUri = null
+    }
+
+    LaunchedEffect(pendingCaptureUri) {
+        val captureUri = pendingCaptureUri ?: return@LaunchedEffect
+        takePictureLauncher.launch(Uri.parse(captureUri))
+    }
 
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         GuidedCaptureScreen(
             innerPadding = innerPadding,
             capturedPanels = capturedPanels,
             selectedStepIndex = selectedStepIndex,
+            cameraMessage = cameraMessage,
             onSelectStep = { selectedStepIndex = it },
-            onMarkCaptured = { step ->
-                val panelName = "${step.title} ${capturedPanels.count { it.panelType == step.panelType } + 1}"
-                capturedPanels.removeAll { it.panelType == step.panelType }
-                capturedPanels.add(
-                    CapturedPanel(
-                        localUri = "pending://camera/${step.panelType.name.lowercase()}",
-                        panelType = step.panelType,
-                        panelName = panelName,
-                    ),
-                )
-                selectedStepIndex = (selectedStepIndex + 1).coerceAtMost(guidedCaptureOrder.lastIndex)
+            onStartCapture = { step ->
+                pendingStepType = step.panelType.name
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                    pendingCaptureUri = createCaptureUri(context, step.panelType).toString()
+                } else {
+                    permissionLauncher.launch(Manifest.permission.CAMERA)
+                }
             },
+            onDismissMessage = { cameraMessage = null },
             onReset = {
                 capturedPanels.clear()
                 selectedStepIndex = 0
+                pendingStepType = null
+                pendingCaptureUri = null
+                cameraMessage = null
             },
         )
     }
@@ -148,13 +223,28 @@ private fun GuidedCaptureScreen(
     innerPadding: PaddingValues,
     capturedPanels: List<CapturedPanel>,
     selectedStepIndex: Int,
+    cameraMessage: String?,
     onSelectStep: (Int) -> Unit,
-    onMarkCaptured: (GuidedCaptureStep) -> Unit,
+    onStartCapture: (GuidedCaptureStep) -> Unit,
+    onDismissMessage: () -> Unit,
     onReset: () -> Unit,
 ) {
     val completedSteps = capturedPanels.map { it.panelType }.toSet()
     val activeStep = guidedCaptureOrder[selectedStepIndex]
     val isReadyForReview = guidedCaptureOrder.all { it.panelType in completedSteps }
+
+    if (cameraMessage != null) {
+        AlertDialog(
+            onDismissRequest = onDismissMessage,
+            confirmButton = {
+                Button(onClick = onDismissMessage) {
+                    Text("OK")
+                }
+            },
+            title = { Text("Capture Status") },
+            text = { Text(cameraMessage) },
+        )
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -188,7 +278,7 @@ private fun GuidedCaptureScreen(
                 step = activeStep,
                 stepNumber = selectedStepIndex + 1,
                 isCompleted = activeStep.panelType in completedSteps,
-                onMarkCaptured = { onMarkCaptured(activeStep) },
+                onStartCapture = { onStartCapture(activeStep) },
             )
         }
 
@@ -222,7 +312,7 @@ private fun GuidedCaptureScreen(
             item {
                 PlaceholderCard(
                     title = "No panels captured yet",
-                    body = "Camera integration is the next Android module. For now, this flow tracks the required packet and strip captures and the order we will enforce in the native app.",
+                    body = "Use the camera button above to capture the required packet panels and strip locally on the device.",
                 )
             }
         } else {
@@ -283,7 +373,7 @@ private fun ActiveStepCard(
     step: GuidedCaptureStep,
     stepNumber: Int,
     isCompleted: Boolean,
-    onMarkCaptured: () -> Unit,
+    onStartCapture: () -> Unit,
 ) {
     Card {
         Column(
@@ -308,8 +398,8 @@ private fun ActiveStepCard(
             )
             StepFieldChips(step.fields)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Button(onClick = onMarkCaptured) {
-                    Text(if (isCompleted) "Replace Capture" else "Mark Captured")
+                Button(onClick = onStartCapture) {
+                    Text(if (isCompleted) "Retake Photo" else "Open Camera")
                 }
                 if (isCompleted) {
                     Text(
@@ -414,6 +504,7 @@ private fun CapturedPanelCard(panel: CapturedPanel) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            PanelPreview(panel.localUri)
             Text(
                 text = panel.panelName,
                 style = MaterialTheme.typography.titleMedium,
@@ -425,10 +516,49 @@ private fun CapturedPanelCard(panel: CapturedPanel) {
                 color = MaterialTheme.colorScheme.primary,
             )
             Text(
-                text = "Saved URI placeholder: ${panel.localUri}",
+                text = "Saved locally: ${panel.localUri}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+    }
+}
+
+@Composable
+private fun PanelPreview(localUri: String) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val bitmap by produceState<android.graphics.Bitmap?>(initialValue = null, localUri) {
+        value = runCatching {
+            context.contentResolver.openInputStream(Uri.parse(localUri))?.use { input ->
+                BitmapFactory.decodeStream(input)
+            }
+        }.getOrNull()
+    }
+
+    if (bitmap != null) {
+        Image(
+            bitmap = bitmap!!.asImageBitmap(),
+            contentDescription = "Captured medicine panel preview",
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(180.dp)
+                .clip(RoundedCornerShape(12.dp)),
+        )
+    } else {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp),
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    text = "Preview unavailable",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
@@ -471,9 +601,9 @@ private fun FooterCard(
             )
             Text(
                 text = if (isReadyForReview) {
-                    "Next Android modules: camera capture, local image persistence, on-device OCR, and the review screen."
+                    "Captured panels are now stored locally. Next Android modules: on-device OCR, extraction, and the review screen."
                 } else {
-                    "Complete the guided capture flow first. After that, we will plug the camera into the same step order and pass the captured images into the on-device OCR pipeline."
+                    "Complete the guided capture flow first. After that, the same locally stored images can move into on-device OCR and review."
                 },
                 style = MaterialTheme.typography.bodyMedium,
             )
@@ -482,4 +612,16 @@ private fun FooterCard(
             }
         }
     }
+}
+
+private fun createCaptureUri(context: Context, panelType: CapturePanelType): Uri {
+    val captureDirectory = File(context.filesDir, "captured_panels").apply { mkdirs() }
+    val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+    val fileName = "${panelType.name.lowercase()}_$timestamp.jpg"
+    val captureFile = File(captureDirectory, fileName)
+    return FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.fileprovider",
+        captureFile,
+    )
 }

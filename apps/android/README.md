@@ -58,6 +58,9 @@ What is included:
 
 - Gradle project skeleton
 - Compose guided capture flow
+- camera permission and `TakePicture` capture wiring
+- local file persistence for captured packet and strip panels
+- per-panel preview and retake support in the guided flow
 - offline capture domain models
 - Room entity skeleton
 - extraction pipeline contract
@@ -67,15 +70,14 @@ What is not done yet:
 
 - OCR integration
 - Room DAO/database wiring
-- camera implementation
 - extraction logic port
 - save/search/edit flows
+- verified Android build and on-device capture test
 
 ## Next Android Modules
 
-1. Local image persistence for captured packet and strip panels
-2. Camera integration into the guided capture flow
-3. On-device OCR
-4. Rule-based extraction and medicine vocabulary correction
-5. Review/edit screen
-6. Room persistence and search
+1. Verify the current camera flow on a real Android build or emulator
+2. On-device OCR
+3. Rule-based extraction and medicine vocabulary correction
+4. Review/edit screen
+5. Room persistence and search
