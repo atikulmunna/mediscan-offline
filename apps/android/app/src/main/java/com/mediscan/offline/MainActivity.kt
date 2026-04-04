@@ -39,6 +39,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -126,12 +127,35 @@ private val panelSaver = listSaver<CapturedPanel, String>(
 @Composable
 private fun OfflineApp() {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val capturedPanels = rememberSaveable(saver = listSaver(
-        save = { panels -> panels.flatMap(panelSaver::save) },
-        restore = { saved ->
-            saved.chunked(4).map { chunk -> panelSaver.restore(chunk)!! }.toMutableList()
-        },
-    )) {
+    val capturedPanels = rememberSaveable(
+        saver = listSaver<SnapshotStateList<CapturedPanel>, String>(
+            save = { panels ->
+                panels.flatMap { panel ->
+                    listOf(
+                        panel.localUri,
+                        panel.panelType.name,
+                        panel.panelName,
+                        panel.ocrText.orEmpty(),
+                    )
+                }
+            },
+            restore = { saved ->
+                val restoredPanels = saved.chunked(4).mapNotNull { chunk ->
+                    if (chunk.size != 4) {
+                        null
+                    } else {
+                        CapturedPanel(
+                            localUri = chunk[0],
+                            panelType = CapturePanelType.valueOf(chunk[1]),
+                            panelName = chunk[2],
+                            ocrText = chunk[3].ifBlank { null },
+                        )
+                    }
+                }
+                mutableStateListOf(*restoredPanels.toTypedArray())
+            },
+        ),
+    ) {
         mutableStateListOf<CapturedPanel>()
     }
     var selectedStepIndex by rememberSaveable { mutableStateOf(0) }
