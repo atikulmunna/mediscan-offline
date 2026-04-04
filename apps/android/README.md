@@ -2,6 +2,12 @@
 
 Native Android pivot for the client's `offline on phone only` requirement.
 
+Status:
+
+- this is the intended product track
+- the implementation is still early-stage
+- the current web/backend apps in the repo are research tooling, not the final delivery architecture
+
 This app is intended to become the real product, while the existing web and backend apps remain useful as:
 
 - OCR and extraction research tooling
