@@ -20,3 +20,8 @@ apps/cloud-extractor/.env
 
 .idea/
 .vscode/
+
+apps/android/local.properties
+apps/android/.gradle/
+apps/android/build/
+apps/android/app/build/
