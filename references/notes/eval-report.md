@@ -1,0 +1,387 @@
+# Reference Evaluation Report
+
+- generated_at: 2026-04-04T09:01:33.605150+00:00
+- reference_dir: C:\Users\Munna\Documents\GitSync\medicine-scanner\references\raw
+- total_images: 12
+- processed_images: 12
+- failed_images: 0
+
+## Provider Counts
+
+- cloud-rules: 12
+
+## Confidence Counts
+
+- medium: 10
+- low: 2
+
+## Field Coverage
+
+- active_ingredients: present 9, missing 3
+- barcode: present 0, missing 12
+- batch_number: present 0, missing 12
+- brand_name: present 12, missing 0
+- dosage_form: present 0, missing 12
+- expiry_date: present 0, missing 12
+- generic_name: present 12, missing 0
+- indications: present 0, missing 12
+- license_number: present 0, missing 12
+- manufacture_date: present 0, missing 12
+- manufacturer: present 5, missing 7
+- quantity: present 0, missing 12
+- serial_number: present 0, missing 12
+- storage_info: present 0, missing 12
+- strength: present 11, missing 1
+- warnings: present 0, missing 12
+
+## Per Image
+
+### image_1.jpg
+- status: ok
+- provider: cloud-rules
+- confidence: medium
+- review_hints:
+  - Missing batch number: check the package manually
+  - Missing manufacture date: check the package manually
+  - Missing expiry date: check the package manually
+  - Missing manufacturer: check the package manually
+  - Verify strength: 1000 mg
+- extracted:
+  - brand_name: "NapaOne"
+  - generic_name: "Paracetamol 1000 mg"
+  - manufacturer: null
+  - batch_number: null
+  - serial_number: null
+  - dosage_form: null
+  - strength: "1000 mg"
+  - quantity: null
+  - manufacture_date: null
+  - expiry_date: null
+  - license_number: null
+  - barcode: null
+  - indications: null
+  - warnings: null
+  - storage_info: null
+  - active_ingredients: "Paracetamol 1000 mg"
+  - confidence: "medium"
+
+### image_10.jpg
+- status: ok
+- provider: cloud-rules
+- confidence: medium
+- review_hints:
+  - Missing batch number: check the package manually
+  - Missing manufacture date: check the package manually
+  - Missing expiry date: check the package manually
+  - Missing manufacturer: check the package manually
+  - Verify strength: 400mg
+- extracted:
+  - brand_name: "Cranbiotic"
+  - generic_name: "Cranberry 400mg"
+  - manufacturer: null
+  - batch_number: null
+  - serial_number: null
+  - dosage_form: null
+  - strength: "400mg"
+  - quantity: null
+  - manufacture_date: null
+  - expiry_date: null
+  - license_number: null
+  - barcode: null
+  - indications: null
+  - warnings: null
+  - storage_info: null
+  - active_ingredients: "cranberry 400mg"
+  - confidence: "medium"
+
+### image_11.jpg
+- status: ok
+- provider: cloud-rules
+- confidence: medium
+- review_hints:
+  - Missing batch number: check the package manually
+  - Missing manufacture date: check the package manually
+  - Missing expiry date: check the package manually
+  - Verify manufacturer: PHARMACEU
+  - Verify strength: 400 mg
+- extracted:
+  - brand_name: "Filmet400"
+  - generic_name: "Metronidazole 400 mg"
+  - manufacturer: "PHARMACEU"
+  - batch_number: null
+  - serial_number: null
+  - dosage_form: null
+  - strength: "400 mg"
+  - quantity: null
+  - manufacture_date: null
+  - expiry_date: null
+  - license_number: null
+  - barcode: null
+  - indications: null
+  - warnings: null
+  - storage_info: null
+  - active_ingredients: "Metronidazole 400 mg"
+  - confidence: "medium"
+
+### image_12.jpg
+- status: ok
+- provider: cloud-rules
+- confidence: medium
+- review_hints:
+  - Missing batch number: check the package manually
+  - Missing manufacture date: check the package manually
+  - Missing expiry date: check the package manually
+  - Missing manufacturer: check the package manually
+  - Verify strength: 3 mg
+- extracted:
+  - brand_name: "Filfresh"
+  - generic_name: "Melatonin 3 mg"
+  - manufacturer: null
+  - batch_number: null
+  - serial_number: null
+  - dosage_form: null
+  - strength: "3 mg"
+  - quantity: null
+  - manufacture_date: null
+  - expiry_date: null
+  - license_number: null
+  - barcode: null
+  - indications: null
+  - warnings: null
+  - storage_info: null
+  - active_ingredients: "Melatonin 3 mg"
+  - confidence: "medium"
+
+### image_2.jpg
+- status: ok
+- provider: cloud-rules
+- confidence: medium
+- review_hints:
+  - Missing batch number: check the package manually
+  - Missing manufacture date: check the package manually
+  - Missing expiry date: check the package manually
+  - Verify manufacturer: ARISTOPHARMA
+  - Verify strength: 10 mg
+- extracted:
+  - brand_name: "Rupa"
+  - generic_name: "Rupatadine 10 mg"
+  - manufacturer: "ARISTOPHARMA"
+  - batch_number: null
+  - serial_number: null
+  - dosage_form: null
+  - strength: "10 mg"
+  - quantity: null
+  - manufacture_date: null
+  - expiry_date: null
+  - license_number: null
+  - barcode: null
+  - indications: null
+  - warnings: null
+  - storage_info: null
+  - active_ingredients: "Rupatadine 10 mg"
+  - confidence: "medium"
+
+### image_3.jpg
+- status: ok
+- provider: cloud-rules
+- confidence: medium
+- review_hints:
+  - Missing batch number: check the package manually
+  - Missing manufacture date: check the package manually
+  - Missing expiry date: check the package manually
+  - Missing manufacturer: check the package manually
+  - Verify strength: 20 mg
+- extracted:
+  - brand_name: "Exium20"
+  - generic_name: "Esomeprazole 20 mg as Esomeprazole Magnesium UsP"
+  - manufacturer: null
+  - batch_number: null
+  - serial_number: null
+  - dosage_form: null
+  - strength: "20 mg"
+  - quantity: null
+  - manufacture_date: null
+  - expiry_date: null
+  - license_number: null
+  - barcode: null
+  - indications: null
+  - warnings: null
+  - storage_info: null
+  - active_ingredients: "Esomeprazole 20 mg as Esomeprazole Magnesium UsP"
+  - confidence: "medium"
+
+### image_4.jpg
+- status: ok
+- provider: cloud-rules
+- confidence: medium
+- review_hints:
+  - Missing batch number: check the package manually
+  - Missing manufacture date: check the package manually
+  - Missing expiry date: check the package manually
+  - Verify manufacturer: PHARMA
+  - Verify strength: 500mg
+- extracted:
+  - brand_name: "Napa Extra"
+  - generic_name: "Paracetamol 500mg"
+  - manufacturer: "PHARMA"
+  - batch_number: null
+  - serial_number: null
+  - dosage_form: null
+  - strength: "500mg"
+  - quantity: null
+  - manufacture_date: null
+  - expiry_date: null
+  - license_number: null
+  - barcode: null
+  - indications: null
+  - warnings: null
+  - storage_info: null
+  - active_ingredients: null
+  - confidence: "medium"
+
+### image_5.jpg
+- status: ok
+- provider: cloud-rules
+- confidence: medium
+- review_hints:
+  - Missing batch number: check the package manually
+  - Missing manufacture date: check the package manually
+  - Missing expiry date: check the package manually
+  - Missing manufacturer: check the package manually
+  - Verify strength: 210mg
+- extracted:
+  - brand_name: "Trilock10"
+  - generic_name: "Montelukast USP 10 mg"
+  - manufacturer: null
+  - batch_number: null
+  - serial_number: null
+  - dosage_form: null
+  - strength: "210mg"
+  - quantity: null
+  - manufacture_date: null
+  - expiry_date: null
+  - license_number: null
+  - barcode: null
+  - indications: null
+  - warnings: null
+  - storage_info: null
+  - active_ingredients: "Montelukast USP 10 mg"
+  - confidence: "medium"
+
+### image_6.jpg
+- status: ok
+- provider: cloud-rules
+- confidence: medium
+- review_hints:
+  - Missing batch number: check the package manually
+  - Missing manufacture date: check the package manually
+  - Missing expiry date: check the package manually
+  - Verify manufacturer: PHARMA
+  - Verify strength: 400mg
+- extracted:
+  - brand_name: "Filmet400"
+  - generic_name: "Metronidazole 400 mg"
+  - manufacturer: "PHARMA"
+  - batch_number: null
+  - serial_number: null
+  - dosage_form: null
+  - strength: "400mg"
+  - quantity: null
+  - manufacture_date: null
+  - expiry_date: null
+  - license_number: null
+  - barcode: null
+  - indications: null
+  - warnings: null
+  - storage_info: null
+  - active_ingredients: "Metronidazole 400mg"
+  - confidence: "medium"
+
+### image_7.jpg
+- status: ok
+- provider: cloud-rules
+- confidence: low
+- review_hints:
+  - Missing batch number: check the package manually
+  - Missing manufacture date: check the package manually
+  - Missing expiry date: check the package manually
+  - Verify manufacturer: SLTD
+  - Missing strength: check the package manually
+  - Low overall confidence: consider retaking the photo with better lighting and focus
+- extracted:
+  - brand_name: "Norium 10"
+  - generic_name: "Flunarizine 10 mg"
+  - manufacturer: "SLTD"
+  - batch_number: null
+  - serial_number: null
+  - dosage_form: null
+  - strength: null
+  - quantity: null
+  - manufacture_date: null
+  - expiry_date: null
+  - license_number: null
+  - barcode: null
+  - indications: null
+  - warnings: null
+  - storage_info: null
+  - active_ingredients: null
+  - confidence: "low"
+
+### image_8.jpg
+- status: ok
+- provider: cloud-rules
+- confidence: low
+- review_hints:
+  - Missing batch number: check the package manually
+  - Missing manufacture date: check the package manually
+  - Missing expiry date: check the package manually
+  - Missing manufacturer: check the package manually
+  - Verify strength: 600mg
+  - Low overall confidence: consider retaking the photo with better lighting and focus
+- extracted:
+  - brand_name: "Coralcal-DX"
+  - generic_name: "Calcium 600 mg"
+  - manufacturer: null
+  - batch_number: null
+  - serial_number: null
+  - dosage_form: null
+  - strength: "600mg"
+  - quantity: null
+  - manufacture_date: null
+  - expiry_date: null
+  - license_number: null
+  - barcode: null
+  - indications: null
+  - warnings: null
+  - storage_info: null
+  - active_ingredients: null
+  - confidence: "low"
+
+### image_9.jpg
+- status: ok
+- provider: cloud-rules
+- confidence: medium
+- review_hints:
+  - Missing batch number: check the package manually
+  - Missing manufacture date: check the package manually
+  - Missing expiry date: check the package manually
+  - Missing manufacturer: check the package manually
+  - Verify strength: 500 mg
+- extracted:
+  - brand_name: "Fluclox"
+  - generic_name: "Flucloxacillin 500 mg"
+  - manufacturer: null
+  - batch_number: null
+  - serial_number: null
+  - dosage_form: null
+  - strength: "500 mg"
+  - quantity: null
+  - manufacture_date: null
+  - expiry_date: null
+  - license_number: null
+  - barcode: null
+  - indications: null
+  - warnings: null
+  - storage_info: null
+  - active_ingredients: "Flucloxacillin 500 mg"
+  - confidence: "medium"

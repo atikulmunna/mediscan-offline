@@ -1,0 +1,1874 @@
+{
+  "generated_at": "2026-04-04T09:01:33.605150+00:00",
+  "reference_dir": "C:\\Users\\Munna\\Documents\\GitSync\\medicine-scanner\\references\\raw",
+  "summary": {
+    "total_images": 12,
+    "processed_images": 12,
+    "failed_images": 0,
+    "provider_counts": {
+      "cloud-rules": 12
+    },
+    "confidence_counts": {
+      "medium": 10,
+      "low": 2
+    },
+    "field_coverage": {
+      "brand_name": {
+        "present": 12,
+        "missing": 0
+      },
+      "generic_name": {
+        "present": 12,
+        "missing": 0
+      },
+      "manufacturer": {
+        "present": 5,
+        "missing": 7
+      },
+      "batch_number": {
+        "present": 0,
+        "missing": 12
+      },
+      "serial_number": {
+        "present": 0,
+        "missing": 12
+      },
+      "dosage_form": {
+        "present": 0,
+        "missing": 12
+      },
+      "strength": {
+        "present": 11,
+        "missing": 1
+      },
+      "quantity": {
+        "present": 0,
+        "missing": 12
+      },
+      "manufacture_date": {
+        "present": 0,
+        "missing": 12
+      },
+      "expiry_date": {
+        "present": 0,
+        "missing": 12
+      },
+      "license_number": {
+        "present": 0,
+        "missing": 12
+      },
+      "barcode": {
+        "present": 0,
+        "missing": 12
+      },
+      "indications": {
+        "present": 0,
+        "missing": 12
+      },
+      "warnings": {
+        "present": 0,
+        "missing": 12
+      },
+      "storage_info": {
+        "present": 0,
+        "missing": 12
+      },
+      "active_ingredients": {
+        "present": 9,
+        "missing": 3
+      }
+    }
+  },
+  "results": [
+    {
+      "filename": "image_1.jpg",
+      "path": "C:\\Users\\Munna\\Documents\\GitSync\\medicine-scanner\\references\\raw\\image_1.jpg",
+      "status": "ok",
+      "ocr_text": "[image_1]\nNapaOne\nMfg.Lic.No.379&119\nMA No.186-976-006\nParacetamol 1000 mg\nauo.eden\nNapaoOne\nMfg.Lic.No.379 &119\nParacetamol 1000 mg\nParacetamol 1000 mg\nMA NO.186-976-006\nNapaoOne\nNapadOne\nMfg.Lic.No.379&119\nParacetamol 1000 mg\nMA No.186-976-006\nonikae\nNapaOne\nLic.No.379&119\n60000\n60000",
+      "ocr_lines": 20,
+      "provider": "cloud-rules",
+      "extracted": {
+        "brand_name": "NapaOne",
+        "generic_name": "Paracetamol 1000 mg",
+        "manufacturer": null,
+        "batch_number": null,
+        "serial_number": null,
+        "dosage_form": null,
+        "strength": "1000 mg",
+        "quantity": null,
+        "manufacture_date": null,
+        "expiry_date": null,
+        "license_number": null,
+        "barcode": null,
+        "indications": null,
+        "warnings": null,
+        "storage_info": null,
+        "active_ingredients": "Paracetamol 1000 mg",
+        "confidence": "medium"
+      },
+      "field_meta": {
+        "brand_name": {
+          "value": "NapaOne",
+          "evidence": "NapaOne",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "generic_name": {
+          "value": "Paracetamol 1000 mg",
+          "evidence": "Paracetamol 1000 mg",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "manufacturer": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "batch_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "serial_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "dosage_form": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "strength": {
+          "value": "1000 mg",
+          "evidence": "Paracetamol 1000 mg",
+          "confidence": "high",
+          "needs_review": true,
+          "reason": "commonly noisy in OCR packaging scans"
+        },
+        "quantity": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "manufacture_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "expiry_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "license_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "barcode": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "indications": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "warnings": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "storage_info": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "active_ingredients": {
+          "value": "Paracetamol 1000 mg",
+          "evidence": "Paracetamol 1000 mg",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        }
+      },
+      "review_hints": [
+        "Missing batch number: check the package manually",
+        "Missing manufacture date: check the package manually",
+        "Missing expiry date: check the package manually",
+        "Missing manufacturer: check the package manually",
+        "Verify strength: 1000 mg"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "filename": "image_10.jpg",
+      "path": "C:\\Users\\Munna\\Documents\\GitSync\\medicine-scanner\\references\\raw\\image_10.jpg",
+      "status": "ok",
+      "ocr_text": "[image_10]\nCranbiotic\ncranberry 400mg\nCranbiotic\ncranberry 400mg\n2036721E0923",
+      "ocr_lines": 5,
+      "provider": "cloud-rules",
+      "extracted": {
+        "brand_name": "Cranbiotic",
+        "generic_name": "Cranberry 400mg",
+        "manufacturer": null,
+        "batch_number": null,
+        "serial_number": null,
+        "dosage_form": null,
+        "strength": "400mg",
+        "quantity": null,
+        "manufacture_date": null,
+        "expiry_date": null,
+        "license_number": null,
+        "barcode": null,
+        "indications": null,
+        "warnings": null,
+        "storage_info": null,
+        "active_ingredients": "cranberry 400mg",
+        "confidence": "medium"
+      },
+      "field_meta": {
+        "brand_name": {
+          "value": "Cranbiotic",
+          "evidence": "Cranbiotic",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "generic_name": {
+          "value": "Cranberry 400mg",
+          "evidence": "cranberry 400mg",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "manufacturer": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "batch_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "serial_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "dosage_form": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "strength": {
+          "value": "400mg",
+          "evidence": "cranberry 400mg",
+          "confidence": "high",
+          "needs_review": true,
+          "reason": "commonly noisy in OCR packaging scans"
+        },
+        "quantity": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "manufacture_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "expiry_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "license_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "barcode": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "indications": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "warnings": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "storage_info": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "active_ingredients": {
+          "value": "cranberry 400mg",
+          "evidence": "cranberry 400mg",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        }
+      },
+      "review_hints": [
+        "Missing batch number: check the package manually",
+        "Missing manufacture date: check the package manually",
+        "Missing expiry date: check the package manually",
+        "Missing manufacturer: check the package manually",
+        "Verify strength: 400mg"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "filename": "image_11.jpg",
+      "path": "C:\\Users\\Munna\\Documents\\GitSync\\medicine-scanner\\references\\raw\\image_11.jpg",
+      "status": "ok",
+      "ocr_text": "[image_11]\n400rng\nMA NO\nXMCO\nAARMA\n80\nPHARMACEU\nBEXIMCO\nFilmer400\nMetronidazole 400 mg\nMfg. Lic. No. 379 & 119\n3010002826\nACEUTICALS LTD\nBEXIMCO\nRHARMA\n400\nFil\nMetronidazole 400 mg\n400\nMetronidazole 400 mg\nMA No.1\n02626\nBEXIMCO\nPHARMA\n400mg\nzole 400 mig",
+      "ocr_lines": 25,
+      "provider": "cloud-rules",
+      "extracted": {
+        "brand_name": "Filmet400",
+        "generic_name": "Metronidazole 400 mg",
+        "manufacturer": "PHARMACEU",
+        "batch_number": null,
+        "serial_number": null,
+        "dosage_form": null,
+        "strength": "400 mg",
+        "quantity": null,
+        "manufacture_date": null,
+        "expiry_date": null,
+        "license_number": null,
+        "barcode": null,
+        "indications": null,
+        "warnings": null,
+        "storage_info": null,
+        "active_ingredients": "Metronidazole 400 mg",
+        "confidence": "medium"
+      },
+      "field_meta": {
+        "brand_name": {
+          "value": "Filmet400",
+          "evidence": null,
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "generic_name": {
+          "value": "Metronidazole 400 mg",
+          "evidence": "Metronidazole 400 mg",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "manufacturer": {
+          "value": "PHARMACEU",
+          "evidence": "PHARMACEU",
+          "confidence": "high",
+          "needs_review": true,
+          "reason": "commonly noisy in OCR packaging scans"
+        },
+        "batch_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "serial_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "dosage_form": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "strength": {
+          "value": "400 mg",
+          "evidence": "Metronidazole 400 mg",
+          "confidence": "high",
+          "needs_review": true,
+          "reason": "commonly noisy in OCR packaging scans"
+        },
+        "quantity": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "manufacture_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "expiry_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "license_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "barcode": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "indications": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "warnings": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "storage_info": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "active_ingredients": {
+          "value": "Metronidazole 400 mg",
+          "evidence": "Metronidazole 400 mg",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        }
+      },
+      "review_hints": [
+        "Missing batch number: check the package manually",
+        "Missing manufacture date: check the package manually",
+        "Missing expiry date: check the package manually",
+        "Verify manufacturer: PHARMACEU",
+        "Verify strength: 400 mg"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "filename": "image_12.jpg",
+      "path": "C:\\Users\\Munna\\Documents\\GitSync\\medicine-scanner\\references\\raw\\image_12.jpg",
+      "status": "ok",
+      "ocr_text": "[image_12]\nFilfresh\"\nMelatonin3mg\nSOUARE\nTM\nFilfresh\nMelatonin 3 mg\nSQUARE\nMfg.LicNo:33&114\n120012P2\n012-952-056\nFilfresh'",
+      "ocr_lines": 11,
+      "provider": "cloud-rules",
+      "extracted": {
+        "brand_name": "Filfresh",
+        "generic_name": "Melatonin 3 mg",
+        "manufacturer": null,
+        "batch_number": null,
+        "serial_number": null,
+        "dosage_form": null,
+        "strength": "3 mg",
+        "quantity": null,
+        "manufacture_date": null,
+        "expiry_date": null,
+        "license_number": null,
+        "barcode": null,
+        "indications": null,
+        "warnings": null,
+        "storage_info": null,
+        "active_ingredients": "Melatonin 3 mg",
+        "confidence": "medium"
+      },
+      "field_meta": {
+        "brand_name": {
+          "value": "Filfresh",
+          "evidence": "Filfresh\"",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "generic_name": {
+          "value": "Melatonin 3 mg",
+          "evidence": "Melatonin 3 mg",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "manufacturer": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "batch_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "serial_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "dosage_form": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "strength": {
+          "value": "3 mg",
+          "evidence": "Melatonin 3 mg",
+          "confidence": "high",
+          "needs_review": true,
+          "reason": "commonly noisy in OCR packaging scans"
+        },
+        "quantity": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "manufacture_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "expiry_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "license_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "barcode": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "indications": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "warnings": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "storage_info": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "active_ingredients": {
+          "value": "Melatonin 3 mg",
+          "evidence": "Melatonin 3 mg",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        }
+      },
+      "review_hints": [
+        "Missing batch number: check the package manually",
+        "Missing manufacture date: check the package manually",
+        "Missing expiry date: check the package manually",
+        "Missing manufacturer: check the package manually",
+        "Verify strength: 3 mg"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "filename": "image_2.jpg",
+      "path": "C:\\Users\\Munna\\Documents\\GitSync\\medicine-scanner\\references\\raw\\image_2.jpg",
+      "status": "ok",
+      "ocr_text": "[image_2]\nRupa\nRupa\nMfg. Lic. No. : 308 & 171\nARISTOPHARMA\nMA No. : 143-525-021\nMARISTC\nMA No.:143-525-0-\nRupatadine 10 mg\nllallek\nRupatadine 10 mg\nRup\nMfg.Lic.No.30\nAa\nMA No.:143-5\nARISTOPHA\nMuoata",
+      "ocr_lines": 16,
+      "provider": "cloud-rules",
+      "extracted": {
+        "brand_name": "Rupa",
+        "generic_name": "Rupatadine 10 mg",
+        "manufacturer": "ARISTOPHARMA",
+        "batch_number": null,
+        "serial_number": null,
+        "dosage_form": null,
+        "strength": "10 mg",
+        "quantity": null,
+        "manufacture_date": null,
+        "expiry_date": null,
+        "license_number": null,
+        "barcode": null,
+        "indications": null,
+        "warnings": null,
+        "storage_info": null,
+        "active_ingredients": "Rupatadine 10 mg",
+        "confidence": "medium"
+      },
+      "field_meta": {
+        "brand_name": {
+          "value": "Rupa",
+          "evidence": "Rupa",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "generic_name": {
+          "value": "Rupatadine 10 mg",
+          "evidence": "Rupatadine 10 mg",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "manufacturer": {
+          "value": "ARISTOPHARMA",
+          "evidence": "ARISTOPHARMA",
+          "confidence": "high",
+          "needs_review": true,
+          "reason": "commonly noisy in OCR packaging scans"
+        },
+        "batch_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "serial_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "dosage_form": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "strength": {
+          "value": "10 mg",
+          "evidence": "Rupatadine 10 mg",
+          "confidence": "high",
+          "needs_review": true,
+          "reason": "commonly noisy in OCR packaging scans"
+        },
+        "quantity": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "manufacture_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "expiry_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "license_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "barcode": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "indications": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "warnings": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "storage_info": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "active_ingredients": {
+          "value": "Rupatadine 10 mg",
+          "evidence": "Rupatadine 10 mg",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        }
+      },
+      "review_hints": [
+        "Missing batch number: check the package manually",
+        "Missing manufacture date: check the package manually",
+        "Missing expiry date: check the package manually",
+        "Verify manufacturer: ARISTOPHARMA",
+        "Verify strength: 10 mg"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "filename": "image_3.jpg",
+      "path": "C:\\Users\\Munna\\Documents\\GitSync\\medicine-scanner\\references\\raw\\image_3.jpg",
+      "status": "ok",
+      "ocr_text": "[image_3]\n1020126E0227\nMfg.Lic.66&247 MA No.052-39-067\nExium20\nEsomeprazole 20 mg as Esomeprazole Magnesium UsP\n?\nExium20\nExium?20\nRADTANT\nBSCIC,Tongi,Gazipur\nExium20\nExium20",
+      "ocr_lines": 11,
+      "provider": "cloud-rules",
+      "extracted": {
+        "brand_name": "Exium20",
+        "generic_name": "Esomeprazole 20 mg as Esomeprazole Magnesium UsP",
+        "manufacturer": null,
+        "batch_number": null,
+        "serial_number": null,
+        "dosage_form": null,
+        "strength": "20 mg",
+        "quantity": null,
+        "manufacture_date": null,
+        "expiry_date": null,
+        "license_number": null,
+        "barcode": null,
+        "indications": null,
+        "warnings": null,
+        "storage_info": null,
+        "active_ingredients": "Esomeprazole 20 mg as Esomeprazole Magnesium UsP",
+        "confidence": "medium"
+      },
+      "field_meta": {
+        "brand_name": {
+          "value": "Exium20",
+          "evidence": "Exium20",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "generic_name": {
+          "value": "Esomeprazole 20 mg as Esomeprazole Magnesium UsP",
+          "evidence": "Esomeprazole 20 mg as Esomeprazole Magnesium UsP",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "manufacturer": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "batch_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "serial_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "dosage_form": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "strength": {
+          "value": "20 mg",
+          "evidence": "Esomeprazole 20 mg as Esomeprazole Magnesium UsP",
+          "confidence": "high",
+          "needs_review": true,
+          "reason": "commonly noisy in OCR packaging scans"
+        },
+        "quantity": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "manufacture_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "expiry_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "license_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "barcode": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "indications": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "warnings": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "storage_info": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "active_ingredients": {
+          "value": "Esomeprazole 20 mg as Esomeprazole Magnesium UsP",
+          "evidence": "Esomeprazole 20 mg as Esomeprazole Magnesium UsP",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        }
+      },
+      "review_hints": [
+        "Missing batch number: check the package manually",
+        "Missing manufacture date: check the package manually",
+        "Missing expiry date: check the package manually",
+        "Missing manufacturer: check the package manually",
+        "Verify strength: 20 mg"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "filename": "image_4.jpg",
+      "path": "C:\\Users\\Munna\\Documents\\GitSync\\medicine-scanner\\references\\raw\\image_4.jpg",
+      "status": "ok",
+      "ocr_text": "[image_4]\n10-006\nOmo&\n000:804\nxtra\narcetamol 500mg &\npaExtr\nMA No.186-480-006\nPHARMA\nNapa\n3010001904\n65mo\nParaceta500 mg&\nMfg.Li379&119\nCaffee 65mg\nExtra\nNapa\nParacetamo!\nMtg.Lic.No",
+      "ocr_lines": 18,
+      "provider": "cloud-rules",
+      "extracted": {
+        "brand_name": "Napa Extra",
+        "generic_name": "Paracetamol 500mg",
+        "manufacturer": "PHARMA",
+        "batch_number": null,
+        "serial_number": null,
+        "dosage_form": null,
+        "strength": "500mg",
+        "quantity": null,
+        "manufacture_date": null,
+        "expiry_date": null,
+        "license_number": null,
+        "barcode": null,
+        "indications": null,
+        "warnings": null,
+        "storage_info": null,
+        "active_ingredients": null,
+        "confidence": "medium"
+      },
+      "field_meta": {
+        "brand_name": {
+          "value": "Napa Extra",
+          "evidence": null,
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "generic_name": {
+          "value": "Paracetamol 500mg",
+          "evidence": null,
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "manufacturer": {
+          "value": "PHARMA",
+          "evidence": "PHARMA",
+          "confidence": "high",
+          "needs_review": true,
+          "reason": "commonly noisy in OCR packaging scans"
+        },
+        "batch_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "serial_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "dosage_form": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "strength": {
+          "value": "500mg",
+          "evidence": "arcetamol 500mg &",
+          "confidence": "high",
+          "needs_review": true,
+          "reason": "commonly noisy in OCR packaging scans"
+        },
+        "quantity": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "manufacture_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "expiry_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "license_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "barcode": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "indications": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "warnings": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "storage_info": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "active_ingredients": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        }
+      },
+      "review_hints": [
+        "Missing batch number: check the package manually",
+        "Missing manufacture date: check the package manually",
+        "Missing expiry date: check the package manually",
+        "Verify manufacturer: PHARMA",
+        "Verify strength: 500mg"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "filename": "image_5.jpg",
+      "path": "C:\\Users\\Munna\\Documents\\GitSync\\medicine-scanner\\references\\raw\\image_5.jpg",
+      "status": "ok",
+      "ocr_text": "[image_5]\nk10\nG\nUoe10mg\n1012680\nMA No.020\nTriloa\nmg\nMontelukast\nMA No.0250044\nMtg.Lic.\nTrilok10G\nMontelukast QSR10 mg\nMfg.Lic.No12&80\nMA No.025-03\n10\n210mg\nMontelukast Us\n80\nMA No.025-0364-044\nMfg.Lic.No\nTrilock10 DlR\nsofa\nMontelukast USP 10 mg\n84-044\nMig.Lic.No.12&80\nMA No.025-09\n910\n10mg\n&80\nMA No.028:036",
+      "ocr_lines": 30,
+      "provider": "cloud-rules",
+      "extracted": {
+        "brand_name": "Trilock10",
+        "generic_name": "Montelukast USP 10 mg",
+        "manufacturer": null,
+        "batch_number": null,
+        "serial_number": null,
+        "dosage_form": null,
+        "strength": "210mg",
+        "quantity": null,
+        "manufacture_date": null,
+        "expiry_date": null,
+        "license_number": null,
+        "barcode": null,
+        "indications": null,
+        "warnings": null,
+        "storage_info": null,
+        "active_ingredients": "Montelukast USP 10 mg",
+        "confidence": "medium"
+      },
+      "field_meta": {
+        "brand_name": {
+          "value": "Trilock10",
+          "evidence": "Trilock10 DlR",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "generic_name": {
+          "value": "Montelukast USP 10 mg",
+          "evidence": "Montelukast USP 10 mg",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "manufacturer": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "batch_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "serial_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "dosage_form": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "strength": {
+          "value": "210mg",
+          "evidence": "210mg",
+          "confidence": "high",
+          "needs_review": true,
+          "reason": "commonly noisy in OCR packaging scans"
+        },
+        "quantity": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "manufacture_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "expiry_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "license_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "barcode": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "indications": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "warnings": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "storage_info": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "active_ingredients": {
+          "value": "Montelukast USP 10 mg",
+          "evidence": "Montelukast USP 10 mg",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        }
+      },
+      "review_hints": [
+        "Missing batch number: check the package manually",
+        "Missing manufacture date: check the package manually",
+        "Missing expiry date: check the package manually",
+        "Missing manufacturer: check the package manually",
+        "Verify strength: 210mg"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "filename": "image_6.jpg",
+      "path": "C:\\Users\\Munna\\Documents\\GitSync\\medicine-scanner\\references\\raw\\image_6.jpg",
+      "status": "ok",
+      "ocr_text": "[image_6]\nPHARMA\nMetronid\n02626\nPHARMACEUTICALSLTL\npr\nMetroRid\nO\nMetroni\nMA No.186-44-027\nPHARMACEUTICALS LTD\n301002\nBEXIMCO\nPHARMA\n400\nMetronidazole 400mg\nOO\nFlmet400\nMetronidazole 400 mg\nMfg.Lic.No.37\nBEXIMCO\nPHARMA\n@400",
+      "ocr_lines": 22,
+      "provider": "cloud-rules",
+      "extracted": {
+        "brand_name": "Filmet400",
+        "generic_name": "Metronidazole 400 mg",
+        "manufacturer": "PHARMA",
+        "batch_number": null,
+        "serial_number": null,
+        "dosage_form": null,
+        "strength": "400mg",
+        "quantity": null,
+        "manufacture_date": null,
+        "expiry_date": null,
+        "license_number": null,
+        "barcode": null,
+        "indications": null,
+        "warnings": null,
+        "storage_info": null,
+        "active_ingredients": "Metronidazole 400mg",
+        "confidence": "medium"
+      },
+      "field_meta": {
+        "brand_name": {
+          "value": "Filmet400",
+          "evidence": null,
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "generic_name": {
+          "value": "Metronidazole 400 mg",
+          "evidence": "Metronidazole 400 mg",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "manufacturer": {
+          "value": "PHARMA",
+          "evidence": "PHARMA",
+          "confidence": "high",
+          "needs_review": true,
+          "reason": "commonly noisy in OCR packaging scans"
+        },
+        "batch_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "serial_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "dosage_form": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "strength": {
+          "value": "400mg",
+          "evidence": "Metronidazole 400mg",
+          "confidence": "high",
+          "needs_review": true,
+          "reason": "commonly noisy in OCR packaging scans"
+        },
+        "quantity": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "manufacture_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "expiry_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "license_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "barcode": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "indications": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "warnings": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "storage_info": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "active_ingredients": {
+          "value": "Metronidazole 400mg",
+          "evidence": "Metronidazole 400mg",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        }
+      },
+      "review_hints": [
+        "Missing batch number: check the package manually",
+        "Missing manufacture date: check the package manually",
+        "Missing expiry date: check the package manually",
+        "Verify manufacturer: PHARMA",
+        "Verify strength: 400mg"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "filename": "image_7.jpg",
+      "path": "C:\\Users\\Munna\\Documents\\GitSync\\medicine-scanner\\references\\raw\\image_7.jpg",
+      "status": "ok",
+      "ocr_text": "[image_7]\n308-442-047\nm\nESKAYEF\nO\nILNO.449\n308-\nMLNo.44\nNo:308-44\nNorium1#\n110\nFlunarizine 10.m\nSKF\nSLTD\noriup",
+      "ocr_lines": 14,
+      "provider": "cloud-rules",
+      "extracted": {
+        "brand_name": "Norium 10",
+        "generic_name": "Flunarizine 10 mg",
+        "manufacturer": "SLTD",
+        "batch_number": null,
+        "serial_number": null,
+        "dosage_form": null,
+        "strength": null,
+        "quantity": null,
+        "manufacture_date": null,
+        "expiry_date": null,
+        "license_number": null,
+        "barcode": null,
+        "indications": null,
+        "warnings": null,
+        "storage_info": null,
+        "active_ingredients": null,
+        "confidence": "low"
+      },
+      "field_meta": {
+        "brand_name": {
+          "value": "Norium 10",
+          "evidence": null,
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "generic_name": {
+          "value": "Flunarizine 10 mg",
+          "evidence": null,
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "manufacturer": {
+          "value": "SLTD",
+          "evidence": "SLTD",
+          "confidence": "high",
+          "needs_review": true,
+          "reason": "commonly noisy in OCR packaging scans"
+        },
+        "batch_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "serial_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "dosage_form": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "strength": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "quantity": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "manufacture_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "expiry_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "license_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "barcode": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "indications": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "warnings": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "storage_info": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "active_ingredients": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        }
+      },
+      "review_hints": [
+        "Missing batch number: check the package manually",
+        "Missing manufacture date: check the package manually",
+        "Missing expiry date: check the package manually",
+        "Verify manufacturer: SLTD",
+        "Missing strength: check the package manually",
+        "Low overall confidence: consider retaking the photo with better lighting and focus"
+      ],
+      "confidence": "low"
+    },
+    {
+      "filename": "image_8.jpg",
+      "path": "C:\\Users\\Munna\\Documents\\GitSync\\medicine-scanner\\references\\raw\\image_8.jpg",
+      "status": "ok",
+      "ocr_text": "[image_8]\nciferol Usp\nonate USP\nR\n8\u53ef\nand VitaminDoo IU as Chole\ncalcium 600rgas Calcium\nCoralcal-Dx\nR\nCalcium 600mg&\nMANo.052-95-062\nVitamin D3400 IU\nR\n8#\nMfg.Lic.66#247\nCoralcal-Dx\n\u00ae\nCalcium 600 mg&\nVitamin D3 400 IU\n1188422E1124",
+      "ocr_lines": 19,
+      "provider": "cloud-rules",
+      "extracted": {
+        "brand_name": "Coralcal-DX",
+        "generic_name": "Calcium 600 mg",
+        "manufacturer": null,
+        "batch_number": null,
+        "serial_number": null,
+        "dosage_form": null,
+        "strength": "600mg",
+        "quantity": null,
+        "manufacture_date": null,
+        "expiry_date": null,
+        "license_number": null,
+        "barcode": null,
+        "indications": null,
+        "warnings": null,
+        "storage_info": null,
+        "active_ingredients": null,
+        "confidence": "low"
+      },
+      "field_meta": {
+        "brand_name": {
+          "value": "Coralcal-DX",
+          "evidence": "Coralcal-Dx",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "generic_name": {
+          "value": "Calcium 600 mg",
+          "evidence": "Calcium 600 mg&",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "manufacturer": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "batch_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "serial_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "dosage_form": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "strength": {
+          "value": "600mg",
+          "evidence": "Calcium 600mg&",
+          "confidence": "high",
+          "needs_review": true,
+          "reason": "commonly noisy in OCR packaging scans"
+        },
+        "quantity": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "manufacture_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "expiry_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "license_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "barcode": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "indications": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "warnings": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "storage_info": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "active_ingredients": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        }
+      },
+      "review_hints": [
+        "Missing batch number: check the package manually",
+        "Missing manufacture date: check the package manually",
+        "Missing expiry date: check the package manually",
+        "Missing manufacturer: check the package manually",
+        "Verify strength: 600mg",
+        "Low overall confidence: consider retaking the photo with better lighting and focus"
+      ],
+      "confidence": "low"
+    },
+    {
+      "filename": "image_9.jpg",
+      "path": "C:\\Users\\Munna\\Documents\\GitSync\\medicine-scanner\\references\\raw\\image_9.jpg",
+      "status": "ok",
+      "ocr_text": "[image_9]\nRTO32E07125Y\nFluciox 500\nFlucloxacillin\nFluclox\nFlucloxacillin 500 mg\nas Sodium BP\nFluclox\nas Sodium BP\nFlucl",
+      "ocr_lines": 9,
+      "provider": "cloud-rules",
+      "extracted": {
+        "brand_name": "Fluclox",
+        "generic_name": "Flucloxacillin 500 mg",
+        "manufacturer": null,
+        "batch_number": null,
+        "serial_number": null,
+        "dosage_form": null,
+        "strength": "500 mg",
+        "quantity": null,
+        "manufacture_date": null,
+        "expiry_date": null,
+        "license_number": null,
+        "barcode": null,
+        "indications": null,
+        "warnings": null,
+        "storage_info": null,
+        "active_ingredients": "Flucloxacillin 500 mg",
+        "confidence": "medium"
+      },
+      "field_meta": {
+        "brand_name": {
+          "value": "Fluclox",
+          "evidence": "Flucloxacillin",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "generic_name": {
+          "value": "Flucloxacillin 500 mg",
+          "evidence": "Flucloxacillin 500 mg",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        },
+        "manufacturer": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "batch_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "serial_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "dosage_form": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "strength": {
+          "value": "500 mg",
+          "evidence": "Flucloxacillin 500 mg",
+          "confidence": "high",
+          "needs_review": true,
+          "reason": "commonly noisy in OCR packaging scans"
+        },
+        "quantity": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "manufacture_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "expiry_date": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "license_number": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "barcode": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "indications": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "warnings": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "storage_info": {
+          "value": null,
+          "evidence": null,
+          "confidence": "low",
+          "needs_review": true,
+          "reason": "missing"
+        },
+        "active_ingredients": {
+          "value": "Flucloxacillin 500 mg",
+          "evidence": "Flucloxacillin 500 mg",
+          "confidence": "high",
+          "needs_review": false,
+          "reason": null
+        }
+      },
+      "review_hints": [
+        "Missing batch number: check the package manually",
+        "Missing manufacture date: check the package manually",
+        "Missing expiry date: check the package manually",
+        "Missing manufacturer: check the package manually",
+        "Verify strength: 500 mg"
+      ],
+      "confidence": "medium"
+    }
+  ]
+}
