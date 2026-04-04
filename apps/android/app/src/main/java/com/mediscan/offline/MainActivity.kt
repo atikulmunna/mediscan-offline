@@ -32,6 +32,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -44,6 +45,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -58,12 +61,20 @@ import androidx.core.content.FileProvider
 import com.mediscan.offline.domain.CapturePanelType
 import com.mediscan.offline.domain.nextIncompleteStepIndex
 import com.mediscan.offline.domain.CapturedPanel
+import com.mediscan.offline.domain.ExtractionResult
+import com.mediscan.offline.domain.MedicineDraft
+import com.mediscan.offline.domain.OcrUiState
+import com.mediscan.offline.domain.buildOcrProgressState
+import com.mediscan.offline.domain.updatePanelOcrText
 import com.mediscan.offline.domain.upsertCapturedPanel
+import com.mediscan.offline.extraction.RuleBasedExtractionPipeline
+import com.mediscan.offline.ocr.MlKitOcrEngine
 import com.mediscan.offline.ui.theme.MediScanTheme
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -127,6 +138,9 @@ private val panelSaver = listSaver<CapturedPanel, String>(
 @Composable
 private fun OfflineApp() {
     val context = androidx.compose.ui.platform.LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val ocrEngine = remember(context) { MlKitOcrEngine(context.applicationContext) }
+    val extractionPipeline = remember { RuleBasedExtractionPipeline() }
     val capturedPanels = rememberSaveable(
         saver = listSaver<SnapshotStateList<CapturedPanel>, String>(
             save = { panels ->
@@ -162,6 +176,9 @@ private fun OfflineApp() {
     var pendingStepType by rememberSaveable { mutableStateOf<String?>(null) }
     var pendingCaptureUri by rememberSaveable { mutableStateOf<String?>(null) }
     var cameraMessage by rememberSaveable { mutableStateOf<String?>(null) }
+    var ocrState by remember { mutableStateOf(OcrUiState()) }
+    var extractionResult by remember { mutableStateOf<ExtractionResult?>(null) }
+    var extractionMessage by rememberSaveable { mutableStateOf<String?>(null) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -221,6 +238,9 @@ private fun OfflineApp() {
             capturedPanels = capturedPanels,
             selectedStepIndex = selectedStepIndex,
             cameraMessage = cameraMessage,
+            ocrState = ocrState,
+            extractionResult = extractionResult,
+            extractionMessage = extractionMessage,
             onSelectStep = { selectedStepIndex = it },
             onStartCapture = { step ->
                 pendingStepType = step.panelType.name
@@ -230,13 +250,60 @@ private fun OfflineApp() {
                     permissionLauncher.launch(Manifest.permission.CAMERA)
                 }
             },
+            onRunOcr = {
+                val panelsForOcr = capturedPanels.toList()
+                ocrState = buildOcrProgressState(
+                    completedCount = 0,
+                    totalCount = panelsForOcr.size,
+                )
+                coroutineScope.launch {
+                    try {
+                        panelsForOcr.forEachIndexed { index, panel ->
+                            val recognizedText = ocrEngine.recognizeText(panel)
+                            val updatedPanels = updatePanelOcrText(
+                                panels = capturedPanels,
+                                panelType = panel.panelType,
+                                ocrText = recognizedText.ifBlank { null },
+                            )
+                            capturedPanels.clear()
+                            capturedPanels.addAll(updatedPanels)
+                            ocrState = buildOcrProgressState(
+                                completedCount = index + 1,
+                                totalCount = panelsForOcr.size,
+                            )
+                        }
+                        ocrState = OcrUiState(
+                            isRunning = false,
+                            completedCount = panelsForOcr.size,
+                            totalCount = panelsForOcr.size,
+                        )
+                        extractionMessage = "OCR complete. You can now normalize the captured text into a medicine draft."
+                    } catch (error: Exception) {
+                        ocrState = buildOcrProgressState(
+                            completedCount = ocrState.completedCount,
+                            totalCount = panelsForOcr.size,
+                            errorMessage = error.message ?: "OCR failed on this device.",
+                        )
+                    }
+                }
+            },
+            onRunExtraction = {
+                coroutineScope.launch {
+                    extractionResult = extractionPipeline.extract(capturedPanels.toList())
+                    extractionMessage = "Extraction draft updated from on-device OCR."
+                }
+            },
             onDismissMessage = { cameraMessage = null },
+            onDismissExtractionMessage = { extractionMessage = null },
             onReset = {
                 capturedPanels.clear()
                 selectedStepIndex = 0
                 pendingStepType = null
                 pendingCaptureUri = null
                 cameraMessage = null
+                ocrState = OcrUiState()
+                extractionResult = null
+                extractionMessage = null
             },
         )
     }
@@ -248,9 +315,15 @@ private fun GuidedCaptureScreen(
     capturedPanels: List<CapturedPanel>,
     selectedStepIndex: Int,
     cameraMessage: String?,
+    ocrState: OcrUiState,
+    extractionResult: ExtractionResult?,
+    extractionMessage: String?,
     onSelectStep: (Int) -> Unit,
     onStartCapture: (GuidedCaptureStep) -> Unit,
+    onRunOcr: () -> Unit,
+    onRunExtraction: () -> Unit,
     onDismissMessage: () -> Unit,
+    onDismissExtractionMessage: () -> Unit,
     onReset: () -> Unit,
 ) {
     val completedSteps = capturedPanels.map { it.panelType }.toSet()
@@ -267,6 +340,19 @@ private fun GuidedCaptureScreen(
             },
             title = { Text("Capture Status") },
             text = { Text(cameraMessage) },
+        )
+    }
+
+    if (extractionMessage != null) {
+        AlertDialog(
+            onDismissRequest = onDismissExtractionMessage,
+            confirmButton = {
+                Button(onClick = onDismissExtractionMessage) {
+                    Text("OK")
+                }
+            },
+            title = { Text("Extraction Status") },
+            text = { Text(extractionMessage) },
         )
     }
 
@@ -295,6 +381,21 @@ private fun GuidedCaptureScreen(
                 totalCount = guidedCaptureOrder.size,
                 isReadyForReview = isReadyForReview,
             )
+        }
+
+        item {
+            OcrStatusCard(
+                capturedPanels = capturedPanels,
+                ocrState = ocrState,
+                onRunOcr = onRunOcr,
+                onRunExtraction = onRunExtraction,
+            )
+        }
+
+        if (extractionResult != null) {
+            item {
+                ExtractionDraftCard(result = extractionResult)
+            }
         }
 
         item {
@@ -390,6 +491,141 @@ private fun ProgressCard(
             )
         }
     }
+}
+
+@Composable
+private fun OcrStatusCard(
+    capturedPanels: List<CapturedPanel>,
+    ocrState: OcrUiState,
+    onRunOcr: () -> Unit,
+    onRunExtraction: () -> Unit,
+) {
+    val canRunOcr = capturedPanels.isNotEmpty() && !ocrState.isRunning
+    val canRunExtraction = capturedPanels.any { !it.ocrText.isNullOrBlank() } && !ocrState.isRunning
+
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(
+                text = "Offline OCR",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                text = if (capturedPanels.isEmpty()) {
+                    "Capture at least one panel before running on-device OCR."
+                } else {
+                    "Run the bundled ML Kit recognizer locally on the captured packet and strip images."
+                },
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            if (ocrState.isRunning) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                    Text(
+                        text = "Processing ${ocrState.completedCount} of ${ocrState.totalCount} panels...",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            } else if (ocrState.totalCount > 0 && ocrState.errorMessage == null) {
+                Text(
+                    text = "OCR complete for ${ocrState.completedCount} panel(s).",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+            if (ocrState.errorMessage != null) {
+                Text(
+                    text = ocrState.errorMessage,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+            Button(onClick = onRunOcr, enabled = canRunOcr) {
+                Text("Run OCR")
+            }
+            OutlinedButton(onClick = onRunExtraction, enabled = canRunExtraction) {
+                Text("Build Draft")
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExtractionDraftCard(result: ExtractionResult) {
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = "Normalized Draft",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
+            DraftField("Brand", result.draft.brandName, result.fieldSources["brand_name"])
+            DraftField("Generic", result.draft.genericName, result.fieldSources["generic_name"])
+            DraftField("Strength", result.draft.strength, result.fieldSources["strength"])
+            DraftField("Batch", result.draft.batchNumber, result.fieldSources["batch_number"])
+            DraftField("MFG", result.draft.manufactureDate, result.fieldSources["manufacture_date"])
+            DraftField("EXP", result.draft.expiryDate, result.fieldSources["expiry_date"])
+            DraftField("License", result.draft.licenseNumber, result.fieldSources["license_number"])
+            DraftField("Quantity", result.draft.quantity, result.fieldSources["quantity"])
+            DraftField("Manufacturer", result.draft.manufacturer, result.fieldSources["manufacturer"])
+            Text(
+                text = "Confidence: ${result.draft.confidence}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            if (result.reviewHints.isNotEmpty()) {
+                Text(
+                    text = "Review Hints",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                result.reviewHints.forEach { hint ->
+                    Text(
+                        text = "- $hint",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DraftField(label: String, value: String?, source: String?) {
+    Text(
+        text = buildString {
+            append(label)
+            append(": ")
+            append(value ?: "Not detected")
+            if (!source.isNullOrBlank()) {
+                append(" (from ")
+                append(source)
+                append(")")
+            }
+        },
+        style = MaterialTheme.typography.bodyMedium,
+    )
 }
 
 @Composable
@@ -544,6 +780,29 @@ private fun CapturedPanelCard(panel: CapturedPanel) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (!panel.ocrText.isNullOrBlank()) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Text(
+                            text = "OCR Text",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
+                            text = panel.ocrText,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+            }
         }
     }
 }
