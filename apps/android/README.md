@@ -95,3 +95,4 @@ What is not done yet:
 - A feature-flagged local assist seam now exists in the Android extraction pipeline.
 - The current flag is off by default, so the shipped behavior remains `ML Kit OCR -> rules -> review -> save`.
 - This lets us plug in a future Gemma-style on-device helper without rewriting the extraction flow again.
+- A Gemma-ready prompt builder now exists so low-confidence OCR cases can be packaged into a structured local-assist request later.
