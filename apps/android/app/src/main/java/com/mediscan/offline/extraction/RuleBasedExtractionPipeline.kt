@@ -79,6 +79,8 @@ private fun cleanLines(rawText: String): List<String> {
         .lines()
         .map { it.trim() }
         .filter { it.isNotBlank() }
+        .flatMap { expandCandidateLine(it) }
+        .distinct()
 }
 
 private fun detectBrandName(
@@ -87,31 +89,9 @@ private fun detectBrandName(
     allLines: List<String>,
 ): String? {
     val candidateLines = stripLines + packetDetailLines + allLines
-    for (line in candidateLines) {
-        val compact = normalizeToken(line)
-        if (correctBrandName(line) != line.trim() || compact in setOf("naprosyn500", "naprosyn", "naprosy")) {
-            return line
-        }
-    }
-
     return candidateLines
-        .filter { line ->
-            val lowered = line.lowercase()
-            val letters = line.count { it.isLetter() }
-            val digits = line.count { it.isDigit() }
-            letters >= 3 &&
-                digits <= letters &&
-                !lowered.contains("batch") &&
-                !lowered.contains("mfg") &&
-                !lowered.contains("exp") &&
-                !lowered.contains("limited") &&
-                !lowered.contains("pharma") &&
-                !Regex("\\b\\d+(?:\\.\\d+)?\\s?(?:mg|mcg|g|ml)\\b").containsMatchIn(lowered)
-        }
-        .maxByOrNull { line ->
-            val bonus = if (line.any { it.isDigit() }) 2 else 0
-            line.length + bonus
-        }
+        .filter(::isBrandCandidate)
+        .maxByOrNull(::brandScore)
 }
 
 private fun detectGenericName(
@@ -120,35 +100,9 @@ private fun detectGenericName(
     allLines: List<String>,
 ): String? {
     val candidateLines = stripLines + packetDetailLines + allLines
-    val preferred = candidateLines.firstOrNull { line ->
-        val lowered = line.lowercase()
-        Regex("\\b\\d+(?:\\.\\d+)?\\s?(?:mg|mcg|g|ml)\\b").containsMatchIn(lowered) &&
-            listOf(
-                "naproxen",
-                "paracetamol",
-                "esomeprazole",
-                "rupatadine",
-                "metronidazole",
-                "melatonin",
-                "flucloxacillin",
-                "montelukast",
-                "flunarizine",
-                "cranberry",
-                "calcium",
-                "caffeine",
-            ).any { lowered.contains(it) || normalizeToken(lowered).contains(it.removePrefix("").replace(" ", "")) }
-    }
-    if (preferred != null) {
-        return preferred
-    }
-
-    return candidateLines.firstOrNull { line ->
-        val lowered = line.lowercase()
-        Regex("\\b\\d+(?:\\.\\d+)?\\s?(?:mg|mcg|g|ml)\\b").containsMatchIn(lowered) &&
-            !lowered.contains("batch") &&
-            !lowered.contains("mfg") &&
-            !lowered.contains("exp")
-    }
+    return candidateLines
+        .filter(::isGenericCandidate)
+        .maxByOrNull(::genericScore)
 }
 
 private fun detectStrength(text: String): String? {
@@ -250,4 +204,94 @@ private fun sourceNameForLine(
         panel.ocrText.orEmpty().lines().any { it.contains(value, ignoreCase = true) }
     }
     return panel?.panelType?.label ?: CapturePanelType.PacketDetailSide.label
+}
+
+private fun expandCandidateLine(line: String): List<String> {
+    val parts = mutableListOf<String>()
+    parts.add(line)
+
+    val englishOnly = line
+        .replace(Regex("[^A-Za-z0-9+().,/\\-\\s]"), " ")
+        .replace(Regex("\\s+"), " ")
+        .trim()
+    if (englishOnly.length >= 3 && englishOnly != line) {
+        parts.add(englishOnly)
+    }
+
+    return parts.filter { it.isNotBlank() }
+}
+
+private fun isBrandCandidate(line: String): Boolean {
+    val lowered = line.lowercase()
+    val latinLetters = line.count { it.isLetter() && it.code < 128 }
+    val digits = line.count { it.isDigit() }
+    return latinLetters >= 3 &&
+        digits <= latinLetters + 4 &&
+        !lowered.contains("batch") &&
+        !lowered.contains("mfg") &&
+        !lowered.contains("exp") &&
+        !lowered.contains("limited") &&
+        !lowered.contains("pharma") &&
+        !lowered.contains("pharmaceutical") &&
+        !lowered.contains("contains") &&
+        !lowered.contains("composition") &&
+        !Regex("\\b\\d+(?:\\.\\d+)?\\s?(?:mg|mcg|g|ml)\\b", RegexOption.IGNORE_CASE).containsMatchIn(lowered)
+}
+
+private fun brandScore(line: String): Int {
+    val lowered = line.lowercase()
+    val latinLetters = line.count { it.isLetter() && it.code < 128 }
+    val bengaliLetters = line.count { it.code in 0x0980..0x09FF }
+    val hasDigits = line.any { it.isDigit() }
+    val corrected = correctBrandName(line)
+
+    var score = 0
+    score += latinLetters * 2
+    score -= bengaliLetters * 3
+    if (looksLikeKnownBrand(line)) score += 50
+    if (corrected != null && corrected != line.trim()) score += 20
+    if (hasDigits) score += 8
+    if (Regex("\\b\\d+(?:\\.\\d+)?\\s?(?:mg|mcg|g|ml)\\b", RegexOption.IGNORE_CASE).containsMatchIn(lowered)) {
+        score -= 40
+    }
+    if (line.contains("(") || line.contains(")")) score -= 4
+    score -= line.length / 10
+    return score
+}
+
+private fun isGenericCandidate(line: String): Boolean {
+    val lowered = line.lowercase()
+    return Regex("\\b\\d+(?:\\.\\d+)?\\s?(?:mg|mcg|g|ml)\\b", RegexOption.IGNORE_CASE).containsMatchIn(lowered) &&
+        !lowered.contains("batch") &&
+        !lowered.contains("mfg") &&
+        !lowered.contains("exp")
+}
+
+private fun genericScore(line: String): Int {
+    val lowered = line.lowercase()
+    val latinLetters = line.count { it.isLetter() && it.code < 128 }
+    val bengaliLetters = line.count { it.code in 0x0980..0x09FF }
+    val normalized = normalizeToken(lowered)
+    val knownTokens = listOf(
+        "naproxen",
+        "paracetamol",
+        "esomeprazole",
+        "rupatadine",
+        "metronidazole",
+        "melatonin",
+        "flucloxacillin",
+        "montelukast",
+        "flunarizine",
+        "cranberry",
+        "calcium",
+        "caffeine",
+    )
+
+    var score = 0
+    score += latinLetters * 2
+    score -= bengaliLetters * 2
+    if (knownTokens.any { lowered.contains(it) || normalized.contains(it) }) score += 40
+    if (lowered.contains("usp") || lowered.contains("bp")) score += 10
+    if (lowered.contains("tablet") || lowered.contains("capsule")) score -= 6
+    return score
 }

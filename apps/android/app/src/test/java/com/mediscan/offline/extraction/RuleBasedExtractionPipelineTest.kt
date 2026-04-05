@@ -90,4 +90,51 @@ class RuleBasedExtractionPipelineTest {
         assertTrue(result.reviewHints.any { it.contains("Batch number missing") })
         assertTrue(result.reviewHints.any { it.contains("Expiry date missing") })
     }
+
+    @Test
+    fun `extract prefers english medicine lines when bengali and english are mixed`() = runBlocking {
+        val panels = listOf(
+            CapturedPanel(
+                localUri = "file://detail.jpg",
+                panelType = CapturePanelType.PacketDetailSide,
+                panelName = "Packet Detail Side",
+                ocrText = """
+                    ন্যাপ্রোসিন ৫০০
+                    Naprosyn 500
+                    ন্যাপ্রোক্সেন ইউএসপি ৫০০ মি.গ্রা.
+                    Naproxen USP 500 mg
+                """.trimIndent(),
+            ),
+        )
+
+        val result = pipeline.extract(panels)
+
+        assertEquals("Naprosyn 500", result.draft.brandName)
+        assertEquals("Naproxen USP 500 mg", result.draft.genericName)
+        assertEquals("Packet Detail Side", result.fieldSources["brand_name"])
+        assertEquals("Packet Detail Side", result.fieldSources["generic_name"])
+    }
+
+    @Test
+    fun `extract ignores manufacturer line when brand and generic are also present`() = runBlocking {
+        val panels = listOf(
+            CapturedPanel(
+                localUri = "file://strip.jpg",
+                panelType = CapturePanelType.Strip,
+                panelName = "Strip",
+                ocrText = """
+                    Radiant Pharmaceuticals Limited
+                    ন্যাপ্রোসিন
+                    Naprosyn 500
+                    Naproxen USP 500 mg
+                """.trimIndent(),
+            ),
+        )
+
+        val result = pipeline.extract(panels)
+
+        assertEquals("Naprosyn 500", result.draft.brandName)
+        assertEquals("Naproxen USP 500 mg", result.draft.genericName)
+        assertEquals("Radiant Pharmaceuticals Limited", result.draft.manufacturer)
+    }
 }

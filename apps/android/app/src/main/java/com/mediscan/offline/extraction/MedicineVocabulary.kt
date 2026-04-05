@@ -16,6 +16,16 @@ private val brandAliases = mapOf(
     "filfresh" to "Filfresh",
 )
 
+private val englishBrandVocabulary = listOf(
+    "naprosyn",
+    "napaone",
+    "napa",
+    "trilock",
+    "norium",
+    "filmet",
+    "filfresh",
+)
+
 private val genericCanonical = mapOf(
     "naproxen" to "Naproxen",
     "paracetamol" to "Paracetamol",
@@ -67,6 +77,19 @@ fun correctBrandName(value: String?): String? {
     }
 
     return if (bestMatch != null && bestDistance <= 2) bestMatch else value.trim()
+}
+
+fun looksLikeKnownBrand(value: String?): Boolean {
+    val compact = normalizeToken(value)
+    if (compact.isBlank()) {
+        return false
+    }
+    if (brandAliases.containsKey(compact)) {
+        return true
+    }
+    return englishBrandVocabulary.any { token ->
+        compact.contains(token) || levenshtein(compact, token) <= 2
+    }
 }
 
 fun correctGenericLine(value: String?): String? {

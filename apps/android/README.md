@@ -61,6 +61,13 @@ What is included:
 - camera permission and `TakePicture` capture wiring
 - local file persistence for captured packet and strip panels
 - per-panel preview and retake support in the guided flow
+- bundled on-device OCR with ML Kit
+- offline rule-based extraction draft generation
+- review/edit form before local save
+- Room database, DAO, and local save flow
+- saved-medicines list wired to local SQLite
+- post-save record detail/edit screen
+- saved-medicines search and confidence filtering
 - offline capture domain models
 - Room entity skeleton
 - extraction pipeline contract
@@ -68,16 +75,23 @@ What is included:
 
 What is not done yet:
 
-- OCR integration
-- Room DAO/database wiring
-- extraction logic port
-- save/search/edit flows
-- verified Android build and on-device capture test
+- duplicate detection on Android
+- audit/history on Android
+- export/import and backup on Android
+- optional local Gemma-assist evaluation for hard bilingual OCR cases
 
 ## Next Android Modules
 
-1. Verify the current camera flow on a real Android build or emulator
-2. On-device OCR
-3. Rule-based extraction and medicine vocabulary correction
-4. Review/edit screen
-5. Room persistence and search
+1. Duplicate detection on Android
+2. Audit/history on Android
+3. Export/import and backup on Android
+
+## Research Notes
+
+- Optional Gemma evaluation note: [docs/gemma-local-evaluation.md](./docs/gemma-local-evaluation.md)
+
+## Experimental Hooks
+
+- A feature-flagged local assist seam now exists in the Android extraction pipeline.
+- The current flag is off by default, so the shipped behavior remains `ML Kit OCR -> rules -> review -> save`.
+- This lets us plug in a future Gemma-style on-device helper without rewriting the extraction flow again.
