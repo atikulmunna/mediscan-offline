@@ -7,6 +7,7 @@ __pycache__/
 
 .DS_Store
 Thumbs.db
+desktop.ini
 
 apps/mobile-web/node_modules/
 apps/mobile-web/dist/
@@ -23,5 +24,6 @@ apps/cloud-extractor/.env
 
 apps/android/local.properties
 apps/android/.gradle/
+apps/android/.kotlin/
 apps/android/build/
 apps/android/app/build/
