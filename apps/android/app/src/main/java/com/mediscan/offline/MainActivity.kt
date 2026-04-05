@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
@@ -35,6 +36,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -58,6 +60,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import com.mediscan.offline.data.local.MediScanDatabase
+import com.mediscan.offline.data.local.MedicineEntity
+import com.mediscan.offline.data.local.applyDraft
+import com.mediscan.offline.data.local.toDraft
+import com.mediscan.offline.data.local.toEntity
 import com.mediscan.offline.domain.CapturePanelType
 import com.mediscan.offline.domain.nextIncompleteStepIndex
 import com.mediscan.offline.domain.CapturedPanel
@@ -67,7 +74,7 @@ import com.mediscan.offline.domain.OcrUiState
 import com.mediscan.offline.domain.buildOcrProgressState
 import com.mediscan.offline.domain.updatePanelOcrText
 import com.mediscan.offline.domain.upsertCapturedPanel
-import com.mediscan.offline.extraction.RuleBasedExtractionPipeline
+import com.mediscan.offline.extraction.createExtractionPipeline
 import com.mediscan.offline.ocr.MlKitOcrEngine
 import com.mediscan.offline.ui.theme.MediScanTheme
 import java.io.File
@@ -140,7 +147,8 @@ private fun OfflineApp() {
     val context = androidx.compose.ui.platform.LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val ocrEngine = remember(context) { MlKitOcrEngine(context.applicationContext) }
-    val extractionPipeline = remember { RuleBasedExtractionPipeline() }
+    val extractionPipeline = remember { createExtractionPipeline() }
+    val medicineDao = remember(context) { MediScanDatabase.getInstance(context).medicineDao() }
     val capturedPanels = rememberSaveable(
         saver = listSaver<SnapshotStateList<CapturedPanel>, String>(
             save = { panels ->
@@ -179,6 +187,23 @@ private fun OfflineApp() {
     var ocrState by remember { mutableStateOf(OcrUiState()) }
     var extractionResult by remember { mutableStateOf<ExtractionResult?>(null) }
     var extractionMessage by rememberSaveable { mutableStateOf<String?>(null) }
+    var editableDraft by remember { mutableStateOf<MedicineDraft?>(null) }
+    var saveMessage by rememberSaveable { mutableStateOf<String?>(null) }
+    var savedRecords by remember { mutableStateOf<List<MedicineEntity>>(emptyList()) }
+    var savedSearchQuery by rememberSaveable { mutableStateOf("") }
+    var savedConfidenceFilter by rememberSaveable { mutableStateOf("all") }
+    var selectedSavedRecord by remember { mutableStateOf<MedicineEntity?>(null) }
+    var editableSavedDraft by remember { mutableStateOf<MedicineDraft?>(null) }
+
+    suspend fun refreshSavedRecords() {
+        val trimmedQuery = savedSearchQuery.trim()
+        val confidence = savedConfidenceFilter.takeUnless { it == "all" }
+        savedRecords = medicineDao.search(trimmedQuery, confidence)
+    }
+
+    LaunchedEffect(savedSearchQuery, savedConfidenceFilter) {
+        refreshSavedRecords()
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -241,6 +266,13 @@ private fun OfflineApp() {
             ocrState = ocrState,
             extractionResult = extractionResult,
             extractionMessage = extractionMessage,
+            editableDraft = editableDraft,
+            saveMessage = saveMessage,
+            savedRecords = savedRecords,
+            savedSearchQuery = savedSearchQuery,
+            savedConfidenceFilter = savedConfidenceFilter,
+            selectedSavedRecord = selectedSavedRecord,
+            editableSavedDraft = editableSavedDraft,
             onSelectStep = { selectedStepIndex = it },
             onStartCapture = { step ->
                 pendingStepType = step.panelType.name
@@ -290,11 +322,44 @@ private fun OfflineApp() {
             onRunExtraction = {
                 coroutineScope.launch {
                     extractionResult = extractionPipeline.extract(capturedPanels.toList())
+                    editableDraft = extractionResult?.draft
                     extractionMessage = "Extraction draft updated from on-device OCR."
                 }
             },
             onDismissMessage = { cameraMessage = null },
             onDismissExtractionMessage = { extractionMessage = null },
+            onDraftChange = { editableDraft = it },
+            onSaveDraft = {
+                val draftToSave = editableDraft ?: return@GuidedCaptureScreen
+                coroutineScope.launch {
+                    medicineDao.insert(draftToSave.toEntity(capturedPanels.toList()))
+                    refreshSavedRecords()
+                    saveMessage = "Medicine saved locally to Room/SQLite."
+                }
+            },
+            onDismissSaveMessage = { saveMessage = null },
+            onSavedSearchQueryChange = { savedSearchQuery = it },
+            onSavedConfidenceFilterChange = { savedConfidenceFilter = it },
+            onOpenSavedRecord = { record ->
+                selectedSavedRecord = record
+                editableSavedDraft = record.toDraft()
+            },
+            onSavedDraftChange = { editableSavedDraft = it },
+            onSaveExistingRecord = {
+                val record = selectedSavedRecord ?: return@GuidedCaptureScreen
+                val draft = editableSavedDraft ?: return@GuidedCaptureScreen
+                coroutineScope.launch {
+                    medicineDao.update(record.applyDraft(draft))
+                    refreshSavedRecords()
+                    selectedSavedRecord = medicineDao.findById(record.id)
+                    editableSavedDraft = selectedSavedRecord?.toDraft()
+                    saveMessage = "Saved medicine updated locally."
+                }
+            },
+            onCloseSavedRecord = {
+                selectedSavedRecord = null
+                editableSavedDraft = null
+            },
             onReset = {
                 capturedPanels.clear()
                 selectedStepIndex = 0
@@ -304,6 +369,7 @@ private fun OfflineApp() {
                 ocrState = OcrUiState()
                 extractionResult = null
                 extractionMessage = null
+                editableDraft = null
             },
         )
     }
@@ -318,12 +384,28 @@ private fun GuidedCaptureScreen(
     ocrState: OcrUiState,
     extractionResult: ExtractionResult?,
     extractionMessage: String?,
+    editableDraft: MedicineDraft?,
+    saveMessage: String?,
+    savedRecords: List<MedicineEntity>,
+    savedSearchQuery: String,
+    savedConfidenceFilter: String,
+    selectedSavedRecord: MedicineEntity?,
+    editableSavedDraft: MedicineDraft?,
     onSelectStep: (Int) -> Unit,
     onStartCapture: (GuidedCaptureStep) -> Unit,
     onRunOcr: () -> Unit,
     onRunExtraction: () -> Unit,
     onDismissMessage: () -> Unit,
     onDismissExtractionMessage: () -> Unit,
+    onDraftChange: (MedicineDraft) -> Unit,
+    onSaveDraft: () -> Unit,
+    onDismissSaveMessage: () -> Unit,
+    onSavedSearchQueryChange: (String) -> Unit,
+    onSavedConfidenceFilterChange: (String) -> Unit,
+    onOpenSavedRecord: (MedicineEntity) -> Unit,
+    onSavedDraftChange: (MedicineDraft) -> Unit,
+    onSaveExistingRecord: () -> Unit,
+    onCloseSavedRecord: () -> Unit,
     onReset: () -> Unit,
 ) {
     val completedSteps = capturedPanels.map { it.panelType }.toSet()
@@ -353,6 +435,45 @@ private fun GuidedCaptureScreen(
             },
             title = { Text("Extraction Status") },
             text = { Text(extractionMessage) },
+        )
+    }
+
+    if (saveMessage != null) {
+        AlertDialog(
+            onDismissRequest = onDismissSaveMessage,
+            confirmButton = {
+                Button(onClick = onDismissSaveMessage) {
+                    Text("OK")
+                }
+            },
+            title = { Text("Save Status") },
+            text = { Text(saveMessage) },
+        )
+    }
+
+    if (selectedSavedRecord != null && editableSavedDraft != null) {
+        AlertDialog(
+            onDismissRequest = onCloseSavedRecord,
+            confirmButton = {
+                Button(onClick = onSaveExistingRecord) {
+                    Text("Update")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = onCloseSavedRecord) {
+                    Text("Close")
+                }
+            },
+            title = {
+                Text(selectedSavedRecord.brandName ?: "Saved Medicine")
+            },
+            text = {
+                SavedRecordEditor(
+                    record = selectedSavedRecord,
+                    draft = editableSavedDraft,
+                    onDraftChange = onSavedDraftChange,
+                )
+            },
         )
     }
 
@@ -395,6 +516,16 @@ private fun GuidedCaptureScreen(
         if (extractionResult != null) {
             item {
                 ExtractionDraftCard(result = extractionResult)
+            }
+        }
+
+        if (editableDraft != null) {
+            item {
+                ReviewDraftCard(
+                    draft = editableDraft,
+                    onDraftChange = onDraftChange,
+                    onSaveDraft = onSaveDraft,
+                )
             }
         }
 
@@ -450,6 +581,17 @@ private fun GuidedCaptureScreen(
             FooterCard(
                 isReadyForReview = isReadyForReview,
                 onReset = onReset,
+            )
+        }
+
+        item {
+            SavedRecordsCard(
+                records = savedRecords,
+                searchQuery = savedSearchQuery,
+                confidenceFilter = savedConfidenceFilter,
+                onSearchQueryChange = onSavedSearchQueryChange,
+                onConfidenceFilterChange = onSavedConfidenceFilterChange,
+                onOpenRecord = onOpenSavedRecord,
             )
         }
     }
@@ -608,6 +750,211 @@ private fun ExtractionDraftCard(result: ExtractionResult) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ReviewDraftCard(
+    draft: MedicineDraft,
+    onDraftChange: (MedicineDraft) -> Unit,
+    onSaveDraft: () -> Unit,
+) {
+    Card {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(
+                text = "Review And Edit",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
+            DraftTextField("Brand Name", draft.brandName) { onDraftChange(draft.copy(brandName = it)) }
+            DraftTextField("Generic Name", draft.genericName) { onDraftChange(draft.copy(genericName = it)) }
+            DraftTextField("Manufacturer", draft.manufacturer) { onDraftChange(draft.copy(manufacturer = it)) }
+            DraftTextField("Strength", draft.strength) { onDraftChange(draft.copy(strength = it)) }
+            DraftTextField("Batch Number", draft.batchNumber) { onDraftChange(draft.copy(batchNumber = it)) }
+            DraftTextField("Manufacture Date", draft.manufactureDate) { onDraftChange(draft.copy(manufactureDate = it)) }
+            DraftTextField("Expiry Date", draft.expiryDate) { onDraftChange(draft.copy(expiryDate = it)) }
+            DraftTextField("License Number", draft.licenseNumber) { onDraftChange(draft.copy(licenseNumber = it)) }
+            DraftTextField("Quantity", draft.quantity) { onDraftChange(draft.copy(quantity = it)) }
+            DraftTextField("Active Ingredients", draft.activeIngredients) { onDraftChange(draft.copy(activeIngredients = it)) }
+            Button(onClick = onSaveDraft, modifier = Modifier.fillMaxWidth()) {
+                Text("Save Locally")
+            }
+        }
+    }
+}
+
+@Composable
+private fun DraftTextField(
+    label: String,
+    value: String?,
+    onValueChange: (String?) -> Unit,
+) {
+    OutlinedTextField(
+        value = value.orEmpty(),
+        onValueChange = { updated ->
+            onValueChange(updated.ifBlank { null })
+        },
+        label = { Text(label) },
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = false,
+    )
+}
+
+@Composable
+private fun SavedRecordsCard(
+    records: List<MedicineEntity>,
+    searchQuery: String,
+    confidenceFilter: String,
+    onSearchQueryChange: (String) -> Unit,
+    onConfidenceFilterChange: (String) -> Unit,
+    onOpenRecord: (MedicineEntity) -> Unit,
+) {
+    val confidenceOptions = listOf("all", "high", "medium", "low")
+
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(
+                text = "Saved Medicines",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = onSearchQueryChange,
+                label = { Text("Search brand, generic, manufacturer") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
+            Text(
+                text = "Confidence Filter",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                confidenceOptions.forEach { option ->
+                    val label = option.replaceFirstChar { it.uppercase() }
+                    if (confidenceFilter == option) {
+                        Button(
+                            onClick = { onConfidenceFilterChange(option) },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(label)
+                        }
+                    } else {
+                        OutlinedButton(
+                            onClick = { onConfidenceFilterChange(option) },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(label)
+                        }
+                    }
+                }
+            }
+            Text(
+                text = "${records.size} saved medicine(s) match the current filter.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (records.isEmpty()) {
+                Text(
+                    text = if (searchQuery.isBlank() && confidenceFilter == "all") {
+                        "No medicines saved locally yet."
+                    } else {
+                        "No saved medicines match the current search or confidence filter."
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            } else {
+                records.take(20).forEach { record ->
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onOpenRecord(record) },
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Text(
+                                text = record.brandName ?: "Unnamed medicine",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            Text(
+                                text = record.genericName ?: "Generic not saved",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                            Text(
+                                text = "Confidence: ${record.confidence}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                            Text(
+                                text = "Saved: ${record.scannedAt}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+                if (records.size > 20) {
+                    Text(
+                        text = "Showing the first 20 matches. Narrow the search to find a specific record faster.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SavedRecordEditor(
+    record: MedicineEntity,
+    draft: MedicineDraft,
+    onDraftChange: (MedicineDraft) -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Text(
+            text = "Saved ${record.scannedAt}",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        DraftTextField("Brand Name", draft.brandName) { onDraftChange(draft.copy(brandName = it)) }
+        DraftTextField("Generic Name", draft.genericName) { onDraftChange(draft.copy(genericName = it)) }
+        DraftTextField("Manufacturer", draft.manufacturer) { onDraftChange(draft.copy(manufacturer = it)) }
+        DraftTextField("Strength", draft.strength) { onDraftChange(draft.copy(strength = it)) }
+        DraftTextField("Batch Number", draft.batchNumber) { onDraftChange(draft.copy(batchNumber = it)) }
+        DraftTextField("Manufacture Date", draft.manufactureDate) { onDraftChange(draft.copy(manufactureDate = it)) }
+        DraftTextField("Expiry Date", draft.expiryDate) { onDraftChange(draft.copy(expiryDate = it)) }
+        DraftTextField("License Number", draft.licenseNumber) { onDraftChange(draft.copy(licenseNumber = it)) }
+        DraftTextField("Quantity", draft.quantity) { onDraftChange(draft.copy(quantity = it)) }
+        DraftTextField("Active Ingredients", draft.activeIngredients) { onDraftChange(draft.copy(activeIngredients = it)) }
     }
 }
 
