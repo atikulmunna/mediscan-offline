@@ -30,9 +30,10 @@ class AssistedExtractionPipeline(
         return baseline.copy(
             draft = mergedDraft,
             reviewHints = baseline.reviewHints +
-                suggestion.reviewHints +
-                "Local assist applied: ${suggestion.providerLabel}. Verify the draft before saving.",
+                suggestion.reviewHints,
             fieldSources = baseline.fieldSources + suggestion.fieldSources,
+            assistApplied = true,
+            assistProvider = suggestion.providerLabel,
         )
     }
 }

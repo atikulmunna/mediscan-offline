@@ -25,12 +25,20 @@ class RuleBasedExtractionPipeline : ExtractionPipeline {
         val brandCandidate = detectBrandName(stripLines, packetDetailLines, allLines)
         val genericCandidate = detectGenericName(stripLines, packetDetailLines, allLines)
         val manufacturerCandidate = detectManufacturer(allLines)
+        val correctedGeneric = correctGenericLine(genericCandidate)
         val draft = MedicineDraft(
             brandName = correctBrandName(brandCandidate),
-            genericName = correctGenericLine(genericCandidate),
+            genericName = correctedGeneric,
             manufacturer = correctManufacturerName(manufacturerCandidate),
             batchNumber = detectBatch(packetDateLines.joinToString("\n")),
-            strength = detectStrength(listOfNotNull(genericCandidate, brandCandidate, allText).joinToString("\n")),
+            strength = detectStrength(
+                listOfNotNull(
+                    correctedGeneric,
+                    genericCandidate,
+                    brandCandidate,
+                    allText,
+                ).joinToString("\n"),
+            ),
             quantity = detectQuantity(packetDetailLines.joinToString("\n")),
             manufactureDate = detectManufactureDate(packetDateLines.joinToString("\n")),
             expiryDate = detectExpiryDate(packetDateLines.joinToString("\n")),
@@ -38,7 +46,7 @@ class RuleBasedExtractionPipeline : ExtractionPipeline {
             activeIngredients = correctGenericLine(detectActiveIngredients(allLines)),
             confidence = inferConfidence(
                 brandName = correctBrandName(brandCandidate),
-                genericName = correctGenericLine(genericCandidate),
+                genericName = correctedGeneric,
                 batchNumber = detectBatch(packetDateLines.joinToString("\n")),
                 expiryDate = detectExpiryDate(packetDateLines.joinToString("\n")),
             ),
@@ -106,10 +114,17 @@ private fun detectGenericName(
 }
 
 private fun detectStrength(text: String): String? {
-    return Regex("\\b(\\d+(?:\\.\\d+)?\\s?(?:mg|mcg|g|ml))\\b", RegexOption.IGNORE_CASE)
-        .find(text)
-        ?.groupValues
-        ?.get(1)
+    val matches = Regex("\\b\\d+(?:\\.\\d+)?\\s?(?:mg|mcg|g|ml)\\b", RegexOption.IGNORE_CASE)
+        .findAll(text)
+        .map { it.value.replace(Regex("\\s+"), " ").trim() }
+        .distinct()
+        .toList()
+
+    return when {
+        matches.isEmpty() -> null
+        matches.size == 1 -> matches.first()
+        else -> matches.joinToString(" + ")
+    }
 }
 
 private fun detectQuantity(text: String): String? {
@@ -150,14 +165,28 @@ private fun detectLicense(text: String): String? {
 }
 
 private fun detectManufacturer(lines: List<String>): String? {
-    return lines.firstOrNull { line ->
-        val lowered = line.lowercase()
-        lowered.contains("limited") ||
-            lowered.contains("ltd") ||
-            lowered.contains("pharma") ||
-            lowered.contains("pharmaceutical") ||
-            lowered.contains("healthcare")
-    }
+    return lines
+        .filter { line ->
+            val lowered = line.lowercase()
+            val latinWords = Regex("[A-Za-z]{3,}").findAll(line).count()
+            latinWords >= 2 &&
+                (
+                    lowered.contains("limited") ||
+                        lowered.contains("ltd") ||
+                        lowered.contains("pharma") ||
+                        lowered.contains("pharmaceutical") ||
+                        lowered.contains("healthcare")
+                    )
+        }
+        .maxByOrNull { line ->
+            val lowered = line.lowercase()
+            var score = 0
+            if (lowered.contains("limited")) score += 6
+            if (lowered.contains("pharmaceutical")) score += 5
+            if (lowered.contains("healthcare")) score += 4
+            score += Regex("[A-Za-z]{3,}").findAll(line).count()
+            score
+        }
 }
 
 private fun detectActiveIngredients(lines: List<String>): String? {

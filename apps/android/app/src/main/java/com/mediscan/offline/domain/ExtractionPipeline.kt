@@ -8,4 +8,6 @@ data class ExtractionResult(
     val draft: MedicineDraft,
     val reviewHints: List<String> = emptyList(),
     val fieldSources: Map<String, String> = emptyMap(),
+    val assistApplied: Boolean = false,
+    val assistProvider: String? = null,
 )

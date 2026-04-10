@@ -35,6 +35,7 @@ class AssistedExtractionPipelineTest {
 
         assertEquals("Naprosyn 500", result.draft.brandName)
         assertEquals(listOf("Baseline hint"), result.reviewHints)
+        assertEquals(false, result.assistApplied)
     }
 
     @Test
@@ -78,7 +79,9 @@ class AssistedExtractionPipelineTest {
         assertEquals("Radiant Pharmaceuticals Limited", result.draft.manufacturer)
         assertEquals("medium", result.draft.confidence)
         assertEquals("Gemma Assist", result.fieldSources["brand_name"])
-        assertTrue(result.reviewHints.any { it.contains("Local assist applied: gemma-stub") })
+        assertTrue(result.reviewHints.any { it.contains("Gemma assist recovered the brand name.") })
+        assertEquals(true, result.assistApplied)
+        assertEquals("gemma-stub", result.assistProvider)
     }
 
     private class FakePipeline(

@@ -40,6 +40,32 @@ class SampleGemmaResponseProviderTest {
     }
 
     @Test
+    fun `generate recovers napa extra style prompts`() {
+        val payload = GemmaAssistPayload(
+            systemPrompt = "stub",
+            userPrompt = """
+                Baseline draft:
+                - brand_name: iapa Extra Napa
+                - generic_name: Caffeine 65 mg
+                - confidence: medium
+
+                OCR panels:
+                1. Strip
+                ocr_text:
+                iapa Extra Napa
+                Caffeine 65 mg
+            """.trimIndent(),
+        )
+
+        val response = kotlinx.coroutines.runBlocking { provider.generate(payload) }
+
+        requireNotNull(response)
+        assertTrue(response.contains("\"brand_name\": \"Napa Extra\""))
+        assertTrue(response.contains("\"generic_name\": \"Paracetamol 500 mg + Caffeine 65 mg\""))
+        assertTrue(response.contains("\"strength\": \"500 mg + 65 mg\""))
+    }
+
+    @Test
     fun `generate returns null when prompt has no known medicine clues`() {
         val payload = GemmaAssistPayload(
             systemPrompt = "stub",
