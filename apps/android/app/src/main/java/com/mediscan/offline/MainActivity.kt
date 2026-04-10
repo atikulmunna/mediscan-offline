@@ -742,6 +742,12 @@ private fun ExtractionDraftCard(result: ExtractionResult) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary,
                 )
+                Text(
+                    text = "Assist Applied: ${if (result.assistApplied) "Yes" else "No"}" +
+                        (result.assistProvider?.let { " ($it)" } ?: ""),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
             }
             if (result.reviewHints.isNotEmpty()) {
                 Text(
