@@ -736,6 +736,13 @@ private fun ExtractionDraftCard(result: ExtractionResult) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary,
             )
+            if (BuildConfig.ENABLE_GEMMA_ASSIST) {
+                Text(
+                    text = "Assist Mode: ${humanizeAssistMode(BuildConfig.LOCAL_ASSIST_MODE)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
             if (result.reviewHints.isNotEmpty()) {
                 Text(
                     text = "Review Hints",
@@ -1254,4 +1261,12 @@ private fun createCaptureUri(context: Context, panelType: CapturePanelType): Uri
         "${context.packageName}.fileprovider",
         captureFile,
     )
+}
+
+private fun humanizeAssistMode(mode: String): String {
+    return when {
+        mode.equals("gemma_sample", ignoreCase = true) -> "Gemma Sample"
+        mode.equals("gemma", ignoreCase = true) -> "Gemma"
+        else -> mode.ifBlank { "None" }
+    }
 }

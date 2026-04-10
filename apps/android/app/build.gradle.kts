@@ -25,7 +25,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("boolean", "ENABLE_GEMMA_ASSIST", "true")
+            buildConfigField("String", "LOCAL_ASSIST_MODE", "\"gemma_sample\"")
+        }
         release {
+            buildConfigField("boolean", "ENABLE_GEMMA_ASSIST", "false")
+            buildConfigField("String", "LOCAL_ASSIST_MODE", "\"none\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
