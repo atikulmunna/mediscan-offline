@@ -7,7 +7,7 @@ fun createExtractionPipeline(): ExtractionPipeline {
     val basePipeline = RuleBasedExtractionPipeline()
     val assist = when {
         !BuildConfig.ENABLE_GEMMA_ASSIST -> NoOpLocalDraftAssist()
-        BuildConfig.LOCAL_ASSIST_MODE.equals("gemma", ignoreCase = true) -> NoOpLocalDraftAssist()
+        BuildConfig.LOCAL_ASSIST_MODE.equals("gemma", ignoreCase = true) -> GemmaStubLocalDraftAssist()
         else -> NoOpLocalDraftAssist()
     }
 
