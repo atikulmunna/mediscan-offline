@@ -97,3 +97,4 @@ What is not done yet:
 - This lets us plug in a future Gemma-style on-device helper without rewriting the extraction flow again.
 - A Gemma-ready prompt builder now exists so low-confidence OCR cases can be packaged into a structured local-assist request later.
 - A structured response parser and stub local-assist adapter now exist, so a future on-device Gemma runtime only needs to provide the actual inference call.
+- A `gemma_sample` mode now exists for end-to-end testing of the assist path without shipping a real local model yet.
