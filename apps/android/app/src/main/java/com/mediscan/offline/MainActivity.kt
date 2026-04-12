@@ -183,6 +183,7 @@ private fun OfflineApp() {
     var selectedStepIndex by rememberSaveable { mutableStateOf(0) }
     var pendingStepType by rememberSaveable { mutableStateOf<String?>(null) }
     var pendingCaptureUri by rememberSaveable { mutableStateOf<String?>(null) }
+    var pendingGalleryStepType by rememberSaveable { mutableStateOf<String?>(null) }
     var cameraMessage by rememberSaveable { mutableStateOf<String?>(null) }
     var ocrState by remember { mutableStateOf(OcrUiState()) }
     var extractionResult by remember { mutableStateOf<ExtractionResult?>(null) }
@@ -252,6 +253,38 @@ private fun OfflineApp() {
         pendingCaptureUri = null
     }
 
+    val pickImageLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+    ) { selectedUri ->
+        val panelTypeName = pendingGalleryStepType
+        if (selectedUri != null && panelTypeName != null) {
+            val panelType = CapturePanelType.valueOf(panelTypeName)
+            val importedUri = importGalleryImage(context, selectedUri, panelType)
+            if (importedUri != null) {
+                val panelName = guidedCaptureOrder.first { it.panelType == panelType }.title
+                val updatedPanels = upsertCapturedPanel(
+                    capturedPanels,
+                    CapturedPanel(
+                        localUri = importedUri.toString(),
+                        panelType = panelType,
+                        panelName = panelName,
+                    ),
+                )
+                capturedPanels.clear()
+                capturedPanels.addAll(updatedPanels)
+                selectedStepIndex = nextIncompleteStepIndex(
+                    requiredOrder = guidedCaptureOrder.map { it.panelType },
+                    panels = capturedPanels,
+                    currentIndex = selectedStepIndex,
+                )
+                cameraMessage = "${panelType.label} imported from gallery."
+            } else {
+                cameraMessage = "Could not import the selected gallery image."
+            }
+        }
+        pendingGalleryStepType = null
+    }
+
     LaunchedEffect(pendingCaptureUri) {
         val captureUri = pendingCaptureUri ?: return@LaunchedEffect
         takePictureLauncher.launch(Uri.parse(captureUri))
@@ -281,6 +314,10 @@ private fun OfflineApp() {
                 } else {
                     permissionLauncher.launch(Manifest.permission.CAMERA)
                 }
+            },
+            onImportFromGallery = { step ->
+                pendingGalleryStepType = step.panelType.name
+                pickImageLauncher.launch("image/*")
             },
             onRunOcr = {
                 val panelsForOcr = capturedPanels.toList()
@@ -365,6 +402,7 @@ private fun OfflineApp() {
                 selectedStepIndex = 0
                 pendingStepType = null
                 pendingCaptureUri = null
+                pendingGalleryStepType = null
                 cameraMessage = null
                 ocrState = OcrUiState()
                 extractionResult = null
@@ -393,6 +431,7 @@ private fun GuidedCaptureScreen(
     editableSavedDraft: MedicineDraft?,
     onSelectStep: (Int) -> Unit,
     onStartCapture: (GuidedCaptureStep) -> Unit,
+    onImportFromGallery: (GuidedCaptureStep) -> Unit,
     onRunOcr: () -> Unit,
     onRunExtraction: () -> Unit,
     onDismissMessage: () -> Unit,
@@ -535,6 +574,7 @@ private fun GuidedCaptureScreen(
                 stepNumber = selectedStepIndex + 1,
                 isCompleted = activeStep.panelType in completedSteps,
                 onStartCapture = { onStartCapture(activeStep) },
+                onImportFromGallery = { onImportFromGallery(activeStep) },
             )
         }
 
@@ -994,6 +1034,7 @@ private fun ActiveStepCard(
     stepNumber: Int,
     isCompleted: Boolean,
     onStartCapture: () -> Unit,
+    onImportFromGallery: () -> Unit,
 ) {
     Card {
         Column(
@@ -1020,6 +1061,9 @@ private fun ActiveStepCard(
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(onClick = onStartCapture) {
                     Text(if (isCompleted) "Retake Photo" else "Open Camera")
+                }
+                OutlinedButton(onClick = onImportFromGallery) {
+                    Text(if (isCompleted) "Replace From Gallery" else "Add From Gallery")
                 }
                 if (isCompleted) {
                     Text(
@@ -1267,6 +1311,22 @@ private fun createCaptureUri(context: Context, panelType: CapturePanelType): Uri
         "${context.packageName}.fileprovider",
         captureFile,
     )
+}
+
+private fun importGalleryImage(
+    context: Context,
+    sourceUri: Uri,
+    panelType: CapturePanelType,
+): Uri? {
+    return runCatching {
+        val targetUri = createCaptureUri(context, panelType)
+        context.contentResolver.openInputStream(sourceUri)?.use { input ->
+            context.contentResolver.openOutputStream(targetUri, "w")?.use { output ->
+                input.copyTo(output)
+            } ?: error("Could not open target output stream.")
+        } ?: error("Could not open selected gallery image.")
+        targetUri
+    }.getOrNull()
 }
 
 private fun humanizeAssistMode(mode: String): String {
