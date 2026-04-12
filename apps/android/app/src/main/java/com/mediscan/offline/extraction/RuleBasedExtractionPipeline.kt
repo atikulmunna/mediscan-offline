@@ -156,7 +156,7 @@ private fun detectManufactureDate(lines: List<String>): String? {
         labelPatterns = listOf(
             Regex("""mfg\.?\s*date""", RegexOption.IGNORE_CASE),
             Regex("""manufacture(?:d)?\s*date""", RegexOption.IGNORE_CASE),
-            Regex("""mfg\b""", RegexOption.IGNORE_CASE),
+            Regex("""mfg\.?(?!\s*lic)(?:\s*dt)?\b""", RegexOption.IGNORE_CASE),
         ),
         isValidValue = ::looksLikeDateValue,
     )
@@ -169,7 +169,7 @@ private fun detectExpiryDate(lines: List<String>): String? {
             Regex("""exp\.?\s*date""", RegexOption.IGNORE_CASE),
             Regex("""expiry\s*date""", RegexOption.IGNORE_CASE),
             Regex("""expires?""", RegexOption.IGNORE_CASE),
-            Regex("""exp\b""", RegexOption.IGNORE_CASE),
+            Regex("""exp\.?(?!\s*lic)(?:\s*dt)?\b""", RegexOption.IGNORE_CASE),
         ),
         isValidValue = ::looksLikeDateValue,
     )
@@ -445,9 +445,18 @@ private fun extractLabeledValue(
             return cleaned
         }
 
-        val nextLine = normalizedLines.getOrNull(index + 1)?.let(::cleanExtractedValue)
-        if (!nextLine.isNullOrBlank() && isValidValue(nextLine)) {
-            return nextLine
+        val nextCandidates = normalizedLines
+            .drop(index + 1)
+            .take(2)
+            .mapNotNull(::cleanExtractedValue)
+
+        nextCandidates.forEach { candidate ->
+            if (labelPatterns.any { it.containsMatchIn(candidate.lowercase()) }) {
+                return@forEach
+            }
+            if (isValidValue(candidate)) {
+                return candidate
+            }
         }
     }
     return null
@@ -471,6 +480,7 @@ private fun looksLikeDateValue(value: String): Boolean {
     return value.any { it.isDigit() } &&
         (
             Regex("""\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b""", RegexOption.IGNORE_CASE).containsMatchIn(lowered) ||
+                Regex("""\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\.?\s*\d{2,4}\b""", RegexOption.IGNORE_CASE).containsMatchIn(lowered) ||
                 value.contains("/") ||
                 value.contains("-")
             )
