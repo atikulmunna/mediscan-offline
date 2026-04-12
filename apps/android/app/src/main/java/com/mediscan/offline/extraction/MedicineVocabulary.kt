@@ -14,6 +14,7 @@ private val brandAliases = mapOf(
     "norium10" to "Norium 10",
     "filmet400" to "Filmet400",
     "filfresh" to "Filfresh",
+    "emistat" to "Emistat",
 )
 
 private val englishBrandVocabulary = listOf(
@@ -24,6 +25,7 @@ private val englishBrandVocabulary = listOf(
     "norium",
     "filmet",
     "filfresh",
+    "emistat",
 )
 
 private val genericCanonical = mapOf(
@@ -36,6 +38,7 @@ private val genericCanonical = mapOf(
     "flucloxacillin" to "Flucloxacillin",
     "montelukast" to "Montelukast",
     "flunarizine" to "Flunarizine",
+    "ondansetron" to "Ondansetron",
     "cranberry" to "Cranberry",
     "calcium" to "Calcium",
     "caffeine" to "Caffeine",

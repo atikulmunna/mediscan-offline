@@ -76,4 +76,32 @@ class SampleGemmaResponseProviderTest {
 
         assertTrue(response == null)
     }
+
+    @Test
+    fun `generate recovers emistat strip prompts`() {
+        val payload = GemmaAssistPayload(
+            systemPrompt = "stub",
+            userPrompt = """
+                Baseline draft:
+                - brand_name: Ondansetron USP ObR 6f
+                - generic_name: 8 mg
+                - confidence: medium
+
+                OCR panels:
+                1. Strip
+                ocr_text:
+                Emistat
+                Ondansetron USP
+                8 mg
+                Healthcare Pharmaceuticals Ltd.
+            """.trimIndent(),
+        )
+
+        val response = kotlinx.coroutines.runBlocking { provider.generate(payload) }
+
+        requireNotNull(response)
+        assertTrue(response.contains("\"brand_name\": \"Emistat\""))
+        assertTrue(response.contains("\"generic_name\": \"Ondansetron USP 8 mg\""))
+        assertTrue(response.contains("\"manufacturer\": \"Healthcare Pharmaceuticals Ltd.\""))
+    }
 }

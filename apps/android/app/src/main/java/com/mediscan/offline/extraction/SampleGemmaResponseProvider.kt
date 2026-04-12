@@ -15,6 +15,7 @@ class SampleGemmaResponseProvider {
             normalizedPrompt.contains("norium10") || normalizedPrompt.contains("norium") -> "Norium 10"
             normalizedPrompt.contains("filfresh") -> "Filfresh"
             normalizedPrompt.contains("filmet400") || normalizedPrompt.contains("filmet") -> "Filmet400"
+            normalizedPrompt.contains("emistat") -> "Emistat"
             else -> null
         }
 
@@ -27,11 +28,13 @@ class SampleGemmaResponseProvider {
             normalizedPrompt.contains("flunarizine") -> "Flunarizine 10 mg"
             normalizedPrompt.contains("metronidazole") -> "Metronidazole 400 mg"
             normalizedPrompt.contains("melatonin") -> "Melatonin 3 mg"
+            normalizedPrompt.contains("ondansetron") -> "Ondansetron USP 8 mg"
             else -> null
         }
 
         val strength = when {
             brand == "Napa Extra" -> "500 mg + 65 mg"
+            brand == "Emistat" -> "8 mg"
             else -> detectStrengthFromPrompt(prompt)
         }
         val manufacturer = when {
@@ -40,6 +43,7 @@ class SampleGemmaResponseProvider {
                 normalizedPrompt.contains("adiantpharmaceuticals") -> "Radiant Pharmaceuticals Limited"
             normalizedPrompt.contains("squarepharmaceuticals") -> "Square Pharmaceuticals Limited"
             normalizedPrompt.contains("inceptapharmaceuticals") -> "Incepta Pharmaceuticals Limited"
+            normalizedPrompt.contains("healthcarepharmaceuticalsltd") -> "Healthcare Pharmaceuticals Ltd."
             else -> null
         }
 

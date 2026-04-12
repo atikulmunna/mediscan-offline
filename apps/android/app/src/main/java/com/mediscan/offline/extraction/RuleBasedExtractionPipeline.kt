@@ -14,23 +14,23 @@ class RuleBasedExtractionPipeline : ExtractionPipeline {
 
         val packetDateLines = groupedLines[CapturePanelType.PacketDateSide].orEmpty()
         val packetDetailLines = groupedLines[CapturePanelType.PacketDetailSide].orEmpty()
+        val packetLines = packetDateLines + packetDetailLines
         val stripLines = groupedLines[CapturePanelType.Strip].orEmpty()
         val allLines = buildList {
-            addAll(packetDateLines)
-            addAll(packetDetailLines)
+            addAll(packetLines)
             addAll(stripLines)
         }
         val allText = allLines.joinToString("\n")
 
-        val brandCandidate = detectBrandName(stripLines, packetDetailLines, allLines)
-        val genericCandidate = detectGenericName(stripLines, packetDetailLines, allLines)
+        val brandCandidate = detectBrandName(stripLines, packetDetailLines)
+        val genericCandidate = detectGenericName(stripLines, packetDetailLines)
         val manufacturerCandidate = detectManufacturer(allLines)
         val correctedGeneric = correctGenericLine(genericCandidate)
         val draft = MedicineDraft(
             brandName = correctBrandName(brandCandidate),
             genericName = correctedGeneric,
             manufacturer = correctManufacturerName(manufacturerCandidate),
-            batchNumber = detectBatch(packetDateLines.joinToString("\n")),
+            batchNumber = detectBatch(packetLines),
             strength = detectStrength(
                 listOfNotNull(
                     correctedGeneric,
@@ -40,15 +40,15 @@ class RuleBasedExtractionPipeline : ExtractionPipeline {
                 ).joinToString("\n"),
             ),
             quantity = detectQuantity(packetDetailLines.joinToString("\n")),
-            manufactureDate = detectManufactureDate(packetDateLines.joinToString("\n")),
-            expiryDate = detectExpiryDate(packetDateLines.joinToString("\n")),
-            licenseNumber = detectLicense(packetDateLines.joinToString("\n")),
+            manufactureDate = detectManufactureDate(packetLines),
+            expiryDate = detectExpiryDate(packetLines),
+            licenseNumber = detectLicense(packetLines),
             activeIngredients = correctGenericLine(detectActiveIngredients(allLines)),
             confidence = inferConfidence(
                 brandName = correctBrandName(brandCandidate),
                 genericName = correctedGeneric,
-                batchNumber = detectBatch(packetDateLines.joinToString("\n")),
-                expiryDate = detectExpiryDate(packetDateLines.joinToString("\n")),
+                batchNumber = detectBatch(packetLines),
+                expiryDate = detectExpiryDate(packetLines),
             ),
         )
 
@@ -94,9 +94,8 @@ private fun cleanLines(rawText: String): List<String> {
 private fun detectBrandName(
     stripLines: List<String>,
     packetDetailLines: List<String>,
-    allLines: List<String>,
 ): String? {
-    val candidateLines = stripLines + packetDetailLines + allLines
+    val candidateLines = stripLines + packetDetailLines
     return candidateLines
         .filter(::isBrandCandidate)
         .maxByOrNull(::brandScore)
@@ -105,9 +104,12 @@ private fun detectBrandName(
 private fun detectGenericName(
     stripLines: List<String>,
     packetDetailLines: List<String>,
-    allLines: List<String>,
 ): String? {
-    val candidateLines = stripLines + packetDetailLines + allLines
+    val candidateLines = stripLines + packetDetailLines
+    val combinedCandidate = detectSplitGenericCandidate(candidateLines)
+    if (combinedCandidate != null) {
+        return combinedCandidate
+    }
     return candidateLines
         .filter(::isGenericCandidate)
         .maxByOrNull(::genericScore)
@@ -134,34 +136,68 @@ private fun detectQuantity(text: String): String? {
         ?.get(1)
 }
 
-private fun detectBatch(text: String): String? {
-    return Regex("(?:batch|b\\.?no|lot)\\s*[:#]?\\s*([A-Z0-9\\-/]+)", RegexOption.IGNORE_CASE)
-        .find(text)
-        ?.groupValues
-        ?.get(1)
+private fun detectBatch(lines: List<String>): String? {
+    return extractLabeledValue(
+        lines = lines,
+        labelPatterns = listOf(
+            Regex("""batch\s*(?:no\.?)?""", RegexOption.IGNORE_CASE),
+            Regex("""b\.?\s*no\.?""", RegexOption.IGNORE_CASE),
+            Regex("""lot""", RegexOption.IGNORE_CASE),
+        ),
+        isValidValue = { value ->
+            value.any { it.isDigit() } && value.any { it.isLetter() } || value.contains("-") || value.contains("/")
+        },
+    )
 }
 
-private fun detectManufactureDate(text: String): String? {
-    return Regex("(?:mfg|manufactured|manufacture date)\\s*[:#]?\\s*([A-Z0-9\\-/ ]+)", RegexOption.IGNORE_CASE)
-        .find(text)
-        ?.groupValues
-        ?.get(1)
-        ?.trim()
+private fun detectManufactureDate(lines: List<String>): String? {
+    return extractLabeledValue(
+        lines = lines,
+        labelPatterns = listOf(
+            Regex("""mfg\.?\s*date""", RegexOption.IGNORE_CASE),
+            Regex("""manufacture(?:d)?\s*date""", RegexOption.IGNORE_CASE),
+            Regex("""mfg\b""", RegexOption.IGNORE_CASE),
+        ),
+        isValidValue = ::looksLikeDateValue,
+    )
 }
 
-private fun detectExpiryDate(text: String): String? {
-    return Regex("(?:exp|expiry|expires|expiry date)\\s*[:#]?\\s*([A-Z0-9\\-/ ]+)", RegexOption.IGNORE_CASE)
-        .find(text)
-        ?.groupValues
-        ?.get(1)
-        ?.trim()
+private fun detectExpiryDate(lines: List<String>): String? {
+    return extractLabeledValue(
+        lines = lines,
+        labelPatterns = listOf(
+            Regex("""exp\.?\s*date""", RegexOption.IGNORE_CASE),
+            Regex("""expiry\s*date""", RegexOption.IGNORE_CASE),
+            Regex("""expires?""", RegexOption.IGNORE_CASE),
+            Regex("""exp\b""", RegexOption.IGNORE_CASE),
+        ),
+        isValidValue = ::looksLikeDateValue,
+    )
 }
 
-private fun detectLicense(text: String): String? {
-    return Regex("(?:license|licence|reg(?:istration)?\\.?\\s*no|ma no)\\s*[:#]?\\s*([A-Z0-9\\-/]+)", RegexOption.IGNORE_CASE)
-        .find(text)
-        ?.groupValues
-        ?.get(1)
+private fun detectLicense(lines: List<String>): String? {
+    val mfgLicense = extractLabeledValue(
+        lines = lines,
+        labelPatterns = listOf(
+            Regex("""mfg\.?\s*lic\.?\s*no\.?""", RegexOption.IGNORE_CASE),
+            Regex("""licen[cs]e\s*no\.?""", RegexOption.IGNORE_CASE),
+            Regex("""lic\.?\s*no\.?""", RegexOption.IGNORE_CASE),
+        ),
+        isValidValue = ::looksLikeLicenseValue,
+    )
+    val maNumber = extractLabeledValue(
+        lines = lines,
+        labelPatterns = listOf(
+            Regex("""ma\s*no\.?""", RegexOption.IGNORE_CASE),
+            Regex("""reg(?:istration)?\.?\s*no\.?""", RegexOption.IGNORE_CASE),
+        ),
+        isValidValue = ::looksLikeLicenseValue,
+    )
+
+    return listOfNotNull(
+        mfgLicense?.let { "Mfg Lic: $it" },
+        maNumber?.let { "MA No: $it" },
+    ).takeIf { it.isNotEmpty() }?.joinToString("; ")
 }
 
 private fun detectManufacturer(lines: List<String>): String? {
@@ -170,6 +206,10 @@ private fun detectManufacturer(lines: List<String>): String? {
             val lowered = line.lowercase()
             val latinWords = Regex("[A-Za-z]{3,}").findAll(line).count()
             latinWords >= 2 &&
+                !lowered.contains("ma no") &&
+                !lowered.contains("batch") &&
+                !lowered.contains("exp") &&
+                !lowered.contains("mfg.") &&
                 (
                     lowered.contains("limited") ||
                         lowered.contains("ltd") ||
@@ -262,6 +302,22 @@ private fun isBrandCandidate(line: String): Boolean {
         !lowered.contains("limited") &&
         !lowered.contains("pharma") &&
         !lowered.contains("pharmaceutical") &&
+        !lowered.contains("prescription") &&
+        !lowered.contains("gazipur") &&
+        !lowered.contains("bangladesh") &&
+        !lowered.contains("kaliakair") &&
+        !lowered.contains("shafipur") &&
+        !lowered.contains("mrp") &&
+        !lowered.contains("vat") &&
+        !lowered.contains("barcode") &&
+        !lowered.contains("manufactured by") &&
+        !lowered.contains("manufactured for") &&
+        !lowered.contains("lic") &&
+        !lowered.contains("date") &&
+        !lowered.contains("ondansetron usp") &&
+        !lowered.contains("healthcare pharmaceuticals") &&
+        !lowered.contains("ma no") &&
+        !lowered.contains("www.") &&
         !lowered.contains("contains") &&
         !lowered.contains("composition") &&
         !Regex("\\b\\d+(?:\\.\\d+)?\\s?(?:mg|mcg|g|ml)\\b", RegexOption.IGNORE_CASE).containsMatchIn(lowered)
@@ -283,6 +339,7 @@ private fun brandScore(line: String): Int {
     if (Regex("\\b\\d+(?:\\.\\d+)?\\s?(?:mg|mcg|g|ml)\\b", RegexOption.IGNORE_CASE).containsMatchIn(lowered)) {
         score -= 40
     }
+    if (lowered.contains(",")) score -= 12
     if (line.contains("(") || line.contains(")")) score -= 4
     score -= line.length / 10
     return score
@@ -311,6 +368,7 @@ private fun genericScore(line: String): Int {
         "flucloxacillin",
         "montelukast",
         "flunarizine",
+        "ondansetron",
         "cranberry",
         "calcium",
         "caffeine",
@@ -323,4 +381,103 @@ private fun genericScore(line: String): Int {
     if (lowered.contains("usp") || lowered.contains("bp")) score += 10
     if (lowered.contains("tablet") || lowered.contains("capsule")) score -= 6
     return score
+}
+
+private fun detectSplitGenericCandidate(lines: List<String>): String? {
+    val normalizedLines = lines.map { it.replace(Regex("\\s+"), " ").trim() }
+    normalizedLines.forEachIndexed { index, line ->
+        val lowered = line.lowercase()
+        val hasKnownGenericToken = listOf(
+            "naproxen",
+            "paracetamol",
+            "esomeprazole",
+            "rupatadine",
+            "metronidazole",
+            "melatonin",
+            "flucloxacillin",
+            "montelukast",
+            "flunarizine",
+            "ondansetron",
+            "caffeine",
+            "calcium",
+            "cranberry",
+        ).any { token ->
+            lowered.contains(token) || normalizeToken(lowered).contains(token)
+        }
+
+        val looksLikeMedicineNameLine =
+            hasKnownGenericToken ||
+                lowered.contains(" usp") ||
+                lowered.contains(" bp") ||
+                lowered.endsWith("usp") ||
+                lowered.endsWith("bp")
+
+        if (!looksLikeMedicineNameLine) {
+            return@forEachIndexed
+        }
+
+        val strengthLine = normalizedLines.getOrNull(index + 1)
+            ?.takeIf { Regex("\\b\\d+(?:\\.\\d+)?\\s?(?:mg|mcg|g|ml)\\b", RegexOption.IGNORE_CASE).containsMatchIn(it) }
+
+        if (strengthLine != null) {
+            return "$line $strengthLine".replace(Regex("\\s+"), " ").trim()
+        }
+    }
+
+    return null
+}
+
+private fun extractLabeledValue(
+    lines: List<String>,
+    labelPatterns: List<Regex>,
+    isValidValue: (String) -> Boolean,
+): String? {
+    val normalizedLines = lines.map { it.replace(Regex("\\s+"), " ").trim() }
+    normalizedLines.forEachIndexed { index, line ->
+        val lowered = line.lowercase()
+        val labelMatch = labelPatterns.firstOrNull { it.containsMatchIn(lowered) } ?: return@forEachIndexed
+        val stripped = line
+            .replace(labelMatch, "")
+            .replace(Regex("""^[\s:.\-#/]+"""), "")
+            .trim()
+        val cleaned = cleanExtractedValue(stripped)
+        if (!cleaned.isNullOrBlank() && isValidValue(cleaned)) {
+            return cleaned
+        }
+
+        val nextLine = normalizedLines.getOrNull(index + 1)?.let(::cleanExtractedValue)
+        if (!nextLine.isNullOrBlank() && isValidValue(nextLine)) {
+            return nextLine
+        }
+    }
+    return null
+}
+
+private fun cleanExtractedValue(value: String): String? {
+    val cleaned = value
+        .replace(Regex("""^[^A-Za-z0-9]+"""), "")
+        .replace(Regex("""\s+"""), " ")
+        .trim()
+    return cleaned.takeUnless {
+        it.isBlank() ||
+            it.equals("no", ignoreCase = true) ||
+            it.equals("date", ignoreCase = true) ||
+            it.equals("for", ignoreCase = true)
+    }
+}
+
+private fun looksLikeDateValue(value: String): Boolean {
+    val lowered = value.lowercase()
+    return value.any { it.isDigit() } &&
+        (
+            Regex("""\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b""", RegexOption.IGNORE_CASE).containsMatchIn(lowered) ||
+                value.contains("/") ||
+                value.contains("-")
+            )
+}
+
+private fun looksLikeLicenseValue(value: String): Boolean {
+    return value.any { it.isDigit() } &&
+        value.any { it.isLetter() || it.isDigit() } &&
+        !value.equals("no", ignoreCase = true)
 }
