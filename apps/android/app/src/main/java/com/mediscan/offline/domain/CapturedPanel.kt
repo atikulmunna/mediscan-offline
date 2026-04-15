@@ -5,4 +5,5 @@ data class CapturedPanel(
     val panelType: CapturePanelType,
     val panelName: String,
     val ocrText: String? = null,
+    val focusedOcrText: String? = null,
 )

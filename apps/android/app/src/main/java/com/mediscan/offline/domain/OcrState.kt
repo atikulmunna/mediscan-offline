@@ -11,10 +11,14 @@ fun updatePanelOcrText(
     panels: List<CapturedPanel>,
     panelType: CapturePanelType,
     ocrText: String?,
+    focusedOcrText: String? = null,
 ): List<CapturedPanel> {
     return panels.map { panel ->
         if (panel.panelType == panelType) {
-            panel.copy(ocrText = ocrText)
+            panel.copy(
+                ocrText = ocrText,
+                focusedOcrText = focusedOcrText,
+            )
         } else {
             panel
         }

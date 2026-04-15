@@ -130,6 +130,7 @@ private val panelSaver = listSaver<CapturedPanel, String>(
             panel.panelType.name,
             panel.panelName,
             panel.ocrText.orEmpty(),
+            panel.focusedOcrText.orEmpty(),
         )
     },
     restore = { values ->
@@ -138,6 +139,7 @@ private val panelSaver = listSaver<CapturedPanel, String>(
             panelType = CapturePanelType.valueOf(values[1]),
             panelName = values[2],
             ocrText = values[3].ifBlank { null },
+            focusedOcrText = values.getOrNull(4).orEmpty().ifBlank { null },
         )
     },
 )
@@ -158,12 +160,18 @@ private fun OfflineApp() {
                         panel.panelType.name,
                         panel.panelName,
                         panel.ocrText.orEmpty(),
+                        panel.focusedOcrText.orEmpty(),
                     )
                 }
             },
             restore = { saved ->
-                val restoredPanels = saved.chunked(4).mapNotNull { chunk ->
-                    if (chunk.size != 4) {
+                val panelChunks = when {
+                    saved.size % 5 == 0 -> saved.chunked(5)
+                    saved.size % 4 == 0 -> saved.chunked(4)
+                    else -> emptyList()
+                }
+                val restoredPanels = panelChunks.mapNotNull { chunk ->
+                    if (chunk.size < 4) {
                         null
                     } else {
                         CapturedPanel(
@@ -171,6 +179,7 @@ private fun OfflineApp() {
                             panelType = CapturePanelType.valueOf(chunk[1]),
                             panelName = chunk[2],
                             ocrText = chunk[3].ifBlank { null },
+                            focusedOcrText = chunk.getOrNull(4).orEmpty().ifBlank { null },
                         )
                     }
                 }
@@ -328,11 +337,12 @@ private fun OfflineApp() {
                 coroutineScope.launch {
                     try {
                         panelsForOcr.forEachIndexed { index, panel ->
-                            val recognizedText = ocrEngine.recognizeText(panel)
+                            val recognized = ocrEngine.recognizeText(panel)
                             val updatedPanels = updatePanelOcrText(
                                 panels = capturedPanels,
                                 panelType = panel.panelType,
-                                ocrText = recognizedText.ifBlank { null },
+                                ocrText = recognized.mergedText.ifBlank { null },
+                                focusedOcrText = recognized.focusedText?.ifBlank { null },
                             )
                             capturedPanels.clear()
                             capturedPanels.addAll(updatedPanels)
@@ -1202,6 +1212,29 @@ private fun CapturedPanelCard(panel: CapturedPanel) {
                         )
                         Text(
                             text = panel.ocrText,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+            }
+            if (!panel.focusedOcrText.isNullOrBlank()) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Text(
+                            text = "Focused Sticker OCR",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.secondary,
+                        )
+                        Text(
+                            text = panel.focusedOcrText,
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }

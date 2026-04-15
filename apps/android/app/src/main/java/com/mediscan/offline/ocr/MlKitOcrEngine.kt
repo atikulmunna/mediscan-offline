@@ -10,6 +10,7 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.mediscan.offline.domain.CapturePanelType
 import com.mediscan.offline.domain.CapturedPanel
 import com.mediscan.offline.domain.OcrEngine
+import com.mediscan.offline.domain.OcrRecognitionResult
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -19,16 +20,16 @@ class MlKitOcrEngine(
 ) : OcrEngine {
     private val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
 
-    override suspend fun recognizeText(panel: CapturedPanel): String {
+    override suspend fun recognizeText(panel: CapturedPanel): OcrRecognitionResult {
         val imageUri = Uri.parse(panel.localUri)
         val baseImage = InputImage.fromFilePath(context, imageUri)
         val baseText = recognize(baseImage)
 
         if (panel.panelType != CapturePanelType.PacketDateSide) {
-            return baseText
+            return OcrRecognitionResult(mergedText = baseText)
         }
 
-        val bitmap = decodeBitmap(imageUri) ?: return baseText
+        val bitmap = decodeBitmap(imageUri) ?: return OcrRecognitionResult(mergedText = baseText)
         val focusedTexts = buildList {
             add(baseText)
             addAll(packetDateCandidates(bitmap).mapNotNull { candidate ->
@@ -38,7 +39,11 @@ class MlKitOcrEngine(
             })
         }
 
-        return mergeRecognizedTexts(focusedTexts)
+        val focusedOnlyTexts = focusedTexts.drop(1)
+        return OcrRecognitionResult(
+            mergedText = mergeRecognizedTexts(focusedTexts),
+            focusedText = mergeRecognizedTexts(focusedOnlyTexts).ifBlank { null },
+        )
     }
 
     private suspend fun recognize(image: InputImage): String {
