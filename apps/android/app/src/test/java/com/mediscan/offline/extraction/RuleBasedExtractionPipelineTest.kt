@@ -208,6 +208,31 @@ class RuleBasedExtractionPipelineTest {
     }
 
     @Test
+    fun `extract does not treat ma number as manufacture date when actual date is missing`() = runBlocking {
+        val panels = listOf(
+            CapturedPanel(
+                localUri = "file://packet-missing-date.jpg",
+                panelType = CapturePanelType.PacketDateSide,
+                panelName = "Packet Date Side",
+                ocrText = """
+                    Batch No. :
+                    SK02556
+                    Mfg. Date :
+                    MA No. : 012-350-021
+                    Mfg. Lic. No. :
+                    33 & 114
+                """.trimIndent(),
+            ),
+        )
+
+        val result = pipeline.extract(panels)
+
+        assertEquals("SK02556", result.draft.batchNumber)
+        assertEquals(null, result.draft.manufactureDate)
+        assertEquals("Mfg Lic: 33 & 114; MA No: 012-350-021", result.draft.licenseNumber)
+    }
+
+    @Test
     fun `extract recovers emistat strip brand and ondansetron generic from mixed text`() = runBlocking {
         val panels = listOf(
             CapturedPanel(

@@ -477,13 +477,25 @@ private fun cleanExtractedValue(value: String): String? {
 
 private fun looksLikeDateValue(value: String): Boolean {
     val lowered = value.lowercase()
-    return value.any { it.isDigit() } &&
-        (
-            Regex("""\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b""", RegexOption.IGNORE_CASE).containsMatchIn(lowered) ||
-                Regex("""\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\.?\s*\d{2,4}\b""", RegexOption.IGNORE_CASE).containsMatchIn(lowered) ||
-                value.contains("/") ||
-                value.contains("-")
-            )
+    if (!value.any { it.isDigit() }) {
+        return false
+    }
+
+    if (
+        Regex("""\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b""", RegexOption.IGNORE_CASE).containsMatchIn(lowered) ||
+        Regex("""\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\.?\s*\d{2,4}\b""", RegexOption.IGNORE_CASE).containsMatchIn(lowered)
+    ) {
+        return true
+    }
+
+    val numericDatePatterns = listOf(
+        Regex("""^\d{1,2}[/-]\d{2,4}$"""),
+        Regex("""^\d{2,4}[/-]\d{1,2}$"""),
+        Regex("""^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$"""),
+        Regex("""^\d{2,4}[/-]\d{1,2}[/-]\d{1,2}$"""),
+    )
+
+    return numericDatePatterns.any { it.matches(value.trim()) }
 }
 
 private fun looksLikeLicenseValue(value: String): Boolean {
