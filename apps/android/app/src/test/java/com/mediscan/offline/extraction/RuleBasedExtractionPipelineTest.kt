@@ -233,6 +233,26 @@ class RuleBasedExtractionPipelineTest {
     }
 
     @Test
+    fun `extract does not treat month year as brand when packet detail text is missing`() = runBlocking {
+        val panels = listOf(
+            CapturedPanel(
+                localUri = "file://packet-date-only.jpg",
+                panelType = CapturePanelType.PacketDetailSide,
+                panelName = "Packet Detail Side",
+                ocrText = """
+                    OCT 25
+                    SEP 28
+                    35.00
+                """.trimIndent(),
+            ),
+        )
+
+        val result = pipeline.extract(panels)
+
+        assertEquals(null, result.draft.brandName)
+    }
+
+    @Test
     fun `extract recovers emistat strip brand and ondansetron generic from mixed text`() = runBlocking {
         val panels = listOf(
             CapturedPanel(

@@ -296,6 +296,7 @@ private fun isBrandCandidate(line: String): Boolean {
     val digits = line.count { it.isDigit() }
     return latinLetters >= 3 &&
         digits <= latinLetters + 4 &&
+        !looksLikeDateValue(line) &&
         !lowered.contains("batch") &&
         !lowered.contains("mfg") &&
         !lowered.contains("exp") &&
@@ -333,6 +334,7 @@ private fun brandScore(line: String): Int {
     var score = 0
     score += latinLetters * 2
     score -= bengaliLetters * 3
+    if (looksLikeDateValue(line)) score -= 80
     if (looksLikeKnownBrand(line)) score += 50
     if (corrected != null && corrected != line.trim()) score += 20
     if (hasDigits) score += 8
