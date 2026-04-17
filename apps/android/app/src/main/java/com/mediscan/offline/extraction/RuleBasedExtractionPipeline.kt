@@ -9,7 +9,13 @@ import com.mediscan.offline.domain.MedicineDraft
 class RuleBasedExtractionPipeline : ExtractionPipeline {
     override suspend fun extract(panels: List<CapturedPanel>): ExtractionResult {
         val groupedLines = panels.associate { panel ->
-            panel.panelType to cleanLines(panel.ocrText.orEmpty())
+            panel.panelType to cleanLines(
+                when {
+                    panel.panelType == CapturePanelType.PacketDateSide && !panel.focusedOcrText.isNullOrBlank() ->
+                        panel.focusedOcrText.orEmpty()
+                    else -> panel.ocrText.orEmpty()
+                },
+            )
         }
 
         val packetDateLines = groupedLines[CapturePanelType.PacketDateSide].orEmpty()

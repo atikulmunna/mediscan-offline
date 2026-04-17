@@ -277,6 +277,20 @@ class RuleBasedExtractionPipelineTest {
                     Manufactured by
                     Apex Pharma Limited
                 """.trimIndent(),
+                focusedOcrText = """
+                    Prescription only
+                    Batch No. :
+                    Mfg. Date :
+                    Exp. Date :
+                    MRP (Tk.):
+                    (including VAT)
+                    5K02556
+                    OCT 25
+                    SEP 28
+                    35.00
+                    Mfg. Lic. No.: 33 & 114
+                    MA No.:012-350-021
+                """.trimIndent(),
             ),
         )
 
