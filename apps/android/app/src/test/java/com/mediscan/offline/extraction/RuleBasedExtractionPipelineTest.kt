@@ -253,6 +253,42 @@ class RuleBasedExtractionPipelineTest {
     }
 
     @Test
+    fun `extract parses stacked packet date label block from screenshot layout`() = runBlocking {
+        val panels = listOf(
+            CapturedPanel(
+                localUri = "file://packet-stacked.jpg",
+                panelType = CapturePanelType.PacketDateSide,
+                panelName = "Packet Date Side",
+                ocrText = """
+                    Prescription only
+                    Batch No. :
+                    Mfg. Date :
+                    Exp. Date :
+                    MRP (Tk.):
+                    (including VAT)
+                    5K02556
+                    OCT 25
+                    SEP 28
+                    35.00
+                    Mfg. Lic. No.: 33 & 114
+                    MA No.:012-350-021
+                    Manufactured for
+                    8'940001'275019
+                    Manufactured by
+                    Apex Pharma Limited
+                """.trimIndent(),
+            ),
+        )
+
+        val result = pipeline.extract(panels)
+
+        assertEquals("5K02556", result.draft.batchNumber)
+        assertEquals("OCT 25", result.draft.manufactureDate)
+        assertEquals("SEP 28", result.draft.expiryDate)
+        assertEquals("Mfg Lic: 33 & 114; MA No: 012-350-021", result.draft.licenseNumber)
+    }
+
+    @Test
     fun `extract recovers emistat strip brand and ondansetron generic from mixed text`() = runBlocking {
         val panels = listOf(
             CapturedPanel(

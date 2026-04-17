@@ -147,7 +147,7 @@ private fun detectBatch(lines: List<String>): String? {
         isValidValue = { value ->
             value.any { it.isDigit() } && value.any { it.isLetter() } || value.contains("-") || value.contains("/")
         },
-    )
+    ) ?: extractSequentialPacketDateFields(lines)["batch"]
 }
 
 private fun detectManufactureDate(lines: List<String>): String? {
@@ -159,7 +159,7 @@ private fun detectManufactureDate(lines: List<String>): String? {
             Regex("""mfg\.?(?!\s*lic)(?:\s*dt)?\b""", RegexOption.IGNORE_CASE),
         ),
         isValidValue = ::looksLikeDateValue,
-    )
+    ) ?: extractSequentialPacketDateFields(lines)["mfg"]
 }
 
 private fun detectExpiryDate(lines: List<String>): String? {
@@ -172,7 +172,7 @@ private fun detectExpiryDate(lines: List<String>): String? {
             Regex("""exp\.?(?!\s*lic)(?:\s*dt)?\b""", RegexOption.IGNORE_CASE),
         ),
         isValidValue = ::looksLikeDateValue,
-    )
+    ) ?: extractSequentialPacketDateFields(lines)["exp"]
 }
 
 private fun detectLicense(lines: List<String>): String? {
@@ -429,6 +429,53 @@ private fun detectSplitGenericCandidate(lines: List<String>): String? {
     return null
 }
 
+private fun extractSequentialPacketDateFields(lines: List<String>): Map<String, String> {
+    val normalizedLines = lines.map { it.replace(Regex("\\s+"), " ").trim() }
+    val labelEntries = normalizedLines.mapIndexedNotNull { index, line ->
+        when {
+            Regex("""batch\s*(?:no\.?)?""", RegexOption.IGNORE_CASE).containsMatchIn(line) -> index to "batch"
+            Regex("""mfg\.?\s*date""", RegexOption.IGNORE_CASE).containsMatchIn(line) -> index to "mfg"
+            Regex("""exp\.?\s*date""", RegexOption.IGNORE_CASE).containsMatchIn(line) ||
+                Regex("""expiry\s*date""", RegexOption.IGNORE_CASE).containsMatchIn(line) -> index to "exp"
+            Regex("""mrp\b""", RegexOption.IGNORE_CASE).containsMatchIn(line) -> index to "mrp"
+            else -> null
+        }
+    }
+
+    if (labelEntries.count { it.second in setOf("batch", "mfg", "exp") } < 3) {
+        return emptyMap()
+    }
+
+    val lastLabelIndex = labelEntries.maxOf { it.first }
+    val values = normalizedLines
+        .drop(lastLabelIndex + 1)
+        .takeWhile { !looksLikePacketSectionBoundary(it) }
+        .mapNotNull(::cleanExtractedValue)
+        .filterNot(::looksLikeOperationalLabelLine)
+
+    if (values.isEmpty()) {
+        return emptyMap()
+    }
+
+    val extracted = mutableMapOf<String, String>()
+    val batchIndex = values.indexOfFirst { it.any(Char::isDigit) && it.any(Char::isLetter) }
+    if (batchIndex >= 0) {
+        extracted["batch"] = values[batchIndex]
+    }
+
+    val dateIndices = values.mapIndexedNotNull { index, value ->
+        index.takeIf { looksLikeDateValue(value) }
+    }
+    if (dateIndices.isNotEmpty()) {
+        extracted["mfg"] = values[dateIndices.first()]
+    }
+    if (dateIndices.size >= 2) {
+        extracted["exp"] = values[dateIndices[1]]
+    }
+
+    return extracted
+}
+
 private fun extractLabeledValue(
     lines: List<String>,
     labelPatterns: List<Regex>,
@@ -475,6 +522,26 @@ private fun cleanExtractedValue(value: String): String? {
             it.equals("date", ignoreCase = true) ||
             it.equals("for", ignoreCase = true)
     }
+}
+
+private fun looksLikeOperationalLabelLine(value: String): Boolean {
+    val lowered = value.lowercase()
+    return lowered.contains("batch no") ||
+        lowered.contains("mfg. date") ||
+        lowered.contains("exp. date") ||
+        lowered.contains("expiry date") ||
+        lowered.contains("mrp") ||
+        lowered.contains("including vat")
+}
+
+private fun looksLikePacketSectionBoundary(value: String): Boolean {
+    val lowered = value.lowercase()
+    return lowered.contains("mfg. lic") ||
+        lowered.contains("ma no") ||
+        lowered.contains("manufactured by") ||
+        lowered.contains("manufactured for") ||
+        lowered.contains("www.") ||
+        lowered.contains("barcode")
 }
 
 private fun looksLikeDateValue(value: String): Boolean {
