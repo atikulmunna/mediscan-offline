@@ -1,6 +1,8 @@
 package com.mediscan.offline
 
 import android.Manifest
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
@@ -373,6 +375,15 @@ private fun OfflineApp() {
                     extractionMessage = "Extraction draft updated from on-device OCR."
                 }
             },
+            onCopyExtractionResult = {
+                val result = extractionResult ?: return@GuidedCaptureScreen
+                copyTextToClipboard(
+                    context = context,
+                    label = "Medicine Draft",
+                    text = buildDraftSummaryText(result),
+                )
+                extractionMessage = "Built draft copied to clipboard."
+            },
             onDismissMessage = { cameraMessage = null },
             onDismissExtractionMessage = { extractionMessage = null },
             onDraftChange = { editableDraft = it },
@@ -444,6 +455,7 @@ private fun GuidedCaptureScreen(
     onImportFromGallery: (GuidedCaptureStep) -> Unit,
     onRunOcr: () -> Unit,
     onRunExtraction: () -> Unit,
+    onCopyExtractionResult: () -> Unit,
     onDismissMessage: () -> Unit,
     onDismissExtractionMessage: () -> Unit,
     onDraftChange: (MedicineDraft) -> Unit,
@@ -564,7 +576,10 @@ private fun GuidedCaptureScreen(
 
         if (extractionResult != null) {
             item {
-                ExtractionDraftCard(result = extractionResult)
+                ExtractionDraftCard(
+                    result = extractionResult,
+                    onCopyExtractionResult = onCopyExtractionResult,
+                )
             }
         }
 
@@ -755,7 +770,10 @@ private fun OcrStatusCard(
 }
 
 @Composable
-private fun ExtractionDraftCard(result: ExtractionResult) {
+private fun ExtractionDraftCard(
+    result: ExtractionResult,
+    onCopyExtractionResult: () -> Unit,
+) {
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -772,6 +790,12 @@ private fun ExtractionDraftCard(result: ExtractionResult) {
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
             )
+            OutlinedButton(
+                onClick = onCopyExtractionResult,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Copy Draft")
+            }
             DraftField("Brand", result.draft.brandName, result.fieldSources["brand_name"])
             DraftField("Generic", result.draft.genericName, result.fieldSources["generic_name"])
             DraftField("Strength", result.draft.strength, result.fieldSources["strength"])
@@ -1036,6 +1060,61 @@ private fun DraftField(label: String, value: String?, source: String?) {
         },
         style = MaterialTheme.typography.bodyMedium,
     )
+}
+
+private fun buildDraftSummaryText(result: ExtractionResult): String {
+    val draft = result.draft
+    val lines = buildList {
+        add("Normalized Draft")
+        add(formatDraftField("Brand", draft.brandName, result.fieldSources["brand_name"]))
+        add(formatDraftField("Generic", draft.genericName, result.fieldSources["generic_name"]))
+        add(formatDraftField("Strength", draft.strength, result.fieldSources["strength"]))
+        add(formatDraftField("Batch", draft.batchNumber, result.fieldSources["batch_number"]))
+        add(formatDraftField("MFG", draft.manufactureDate, result.fieldSources["manufacture_date"]))
+        add(formatDraftField("EXP", draft.expiryDate, result.fieldSources["expiry_date"]))
+        add(formatDraftField("License", draft.licenseNumber, result.fieldSources["license_number"]))
+        add(formatDraftField("Quantity", draft.quantity, result.fieldSources["quantity"]))
+        add(formatDraftField("Manufacturer", draft.manufacturer, result.fieldSources["manufacturer"]))
+        add("Confidence: ${draft.confidence}")
+        if (BuildConfig.ENABLE_GEMMA_ASSIST) {
+            add("Assist Mode: ${humanizeAssistMode(BuildConfig.LOCAL_ASSIST_MODE)}")
+            add(
+                "Assist Applied: " +
+                    if (result.assistApplied) {
+                        "Yes" + (result.assistProvider?.let { " ($it)" } ?: "")
+                    } else {
+                        "No"
+                    },
+            )
+        }
+        if (result.reviewHints.isNotEmpty()) {
+            add("Review Hints")
+            result.reviewHints.forEach { hint -> add("- $hint") }
+        }
+    }
+    return lines.joinToString("\n")
+}
+
+private fun formatDraftField(label: String, value: String?, source: String?): String {
+    return buildString {
+        append(label)
+        append(": ")
+        append(value ?: "Not detected")
+        if (!source.isNullOrBlank()) {
+            append(" (from ")
+            append(source)
+            append(")")
+        }
+    }
+}
+
+private fun copyTextToClipboard(
+    context: Context,
+    label: String,
+    text: String,
+) {
+    val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clipboardManager.setPrimaryClip(ClipData.newPlainText(label, text))
 }
 
 @Composable
