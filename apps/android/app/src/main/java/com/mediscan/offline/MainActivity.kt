@@ -1250,6 +1250,7 @@ private fun StepFieldChips(fields: List<String>) {
 
 @Composable
 private fun CapturedPanelCard(panel: CapturedPanel) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     Card {
         Column(
             modifier = Modifier
@@ -1289,6 +1290,11 @@ private fun CapturedPanelCard(panel: CapturedPanel) {
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.primary,
                         )
+                        OutlinedButton(
+                            onClick = { copyTextToClipboard(context, "ocr_text", panel.ocrText.orEmpty()) },
+                        ) {
+                            Text("Copy OCR Text")
+                        }
                         Text(
                             text = panel.ocrText,
                             style = MaterialTheme.typography.bodySmall,
@@ -1312,6 +1318,17 @@ private fun CapturedPanelCard(panel: CapturedPanel) {
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.secondary,
                         )
+                        OutlinedButton(
+                            onClick = {
+                                copyTextToClipboard(
+                                    context,
+                                    "focused_sticker_ocr",
+                                    panel.focusedOcrText.orEmpty(),
+                                )
+                            },
+                        ) {
+                            Text("Copy Focused OCR")
+                        }
                         Text(
                             text = panel.focusedOcrText,
                             style = MaterialTheme.typography.bodySmall,
