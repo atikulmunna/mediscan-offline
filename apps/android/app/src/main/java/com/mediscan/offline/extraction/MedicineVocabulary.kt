@@ -15,6 +15,7 @@ private val brandAliases = mapOf(
     "filmet400" to "Filmet400",
     "filfresh" to "Filfresh",
     "emistat" to "Emistat",
+    "alatrol" to "Alatrol",
 )
 
 private val englishBrandVocabulary = listOf(
@@ -26,6 +27,7 @@ private val englishBrandVocabulary = listOf(
     "filmet",
     "filfresh",
     "emistat",
+    "alatrol",
 )
 
 private val genericCanonical = mapOf(
@@ -39,6 +41,7 @@ private val genericCanonical = mapOf(
     "montelukast" to "Montelukast",
     "flunarizine" to "Flunarizine",
     "ondansetron" to "Ondansetron",
+    "cetirizine" to "Cetirizine",
     "cranberry" to "Cranberry",
     "calcium" to "Calcium",
     "caffeine" to "Caffeine",
@@ -127,6 +130,8 @@ fun correctGenericLine(value: String?): String? {
         }
         corrected = updatedWords.joinToString(" ").replace(Regex("\\s+"), " ").trim()
     }
+
+    corrected = corrected.replace(Regex("""[.,;:]+$"""), "").trim()
 
     return corrected.ifBlank { value.trim() }
 }

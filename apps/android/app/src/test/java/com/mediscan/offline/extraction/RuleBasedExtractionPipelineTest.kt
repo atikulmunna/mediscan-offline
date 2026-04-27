@@ -359,4 +359,31 @@ class RuleBasedExtractionPipelineTest {
         assertEquals("3 x 10 tablets", result.draft.quantity)
         assertEquals("Apex Pharma Limited", result.draft.manufacturer)
     }
+
+    @Test
+    fun `extract recovers alatrol packet detail brand generic strength and syrup quantity`() = runBlocking {
+        val panels = listOf(
+            CapturedPanel(
+                localUri = "file://alatrol-detail.jpg",
+                panelType = CapturePanelType.PacketDetailSide,
+                panelName = "Packet Detail Side",
+                ocrText = """
+                    Alatrol
+                    Cetirnizine Hydrochloride BP
+                    Composition
+                    Each 5 ml syrup contains
+                    Cetirizine Hydrochloride BP 5 mg.
+                    60 ml
+                    Syrup
+                """.trimIndent(),
+            ),
+        )
+
+        val result = pipeline.extract(panels)
+
+        assertEquals("Alatrol", result.draft.brandName)
+        assertEquals("Cetirizine Hydrochloride BP 5 mg", result.draft.genericName)
+        assertEquals("5 mg", result.draft.strength)
+        assertEquals("60 ml", result.draft.quantity)
+    }
 }

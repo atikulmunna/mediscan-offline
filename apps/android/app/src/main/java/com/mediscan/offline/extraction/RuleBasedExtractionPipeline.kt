@@ -37,13 +37,9 @@ class RuleBasedExtractionPipeline : ExtractionPipeline {
             genericName = correctedGeneric,
             manufacturer = correctManufacturerName(manufacturerCandidate),
             batchNumber = detectBatch(packetLines),
-            strength = detectStrength(
-                listOfNotNull(
-                    correctedGeneric,
-                    genericCandidate,
-                    brandCandidate,
-                    allText,
-                ).joinToString("\n"),
+        strength = detectStrength(
+                primaryText = listOfNotNull(correctedGeneric, genericCandidate).joinToString("\n"),
+                fallbackText = listOfNotNull(brandCandidate, allText).joinToString("\n"),
             ),
             quantity = detectQuantity(packetDetailLines.joinToString("\n")),
             manufactureDate = detectManufactureDate(packetLines),
@@ -121,18 +117,14 @@ private fun detectGenericName(
         .maxByOrNull(::genericScore)
 }
 
-private fun detectStrength(text: String): String? {
-    val matches = Regex("\\b\\d+(?:\\.\\d+)?\\s?(?:mg|mcg|g|ml)\\b", RegexOption.IGNORE_CASE)
-        .findAll(text)
-        .map { it.value.replace(Regex("\\s+"), " ").trim() }
-        .distinct()
-        .toList()
-
-    return when {
-        matches.isEmpty() -> null
-        matches.size == 1 -> matches.first()
-        else -> matches.joinToString(" + ")
+private fun detectStrength(primaryText: String, fallbackText: String): String? {
+    val primaryMatches = findStrengthMatches(primaryText)
+    if (primaryMatches.isNotEmpty()) {
+        return formatStrengthMatches(primaryMatches)
     }
+
+    val fallbackMatches = findStrengthMatches(fallbackText)
+    return formatStrengthMatches(fallbackMatches)
 }
 
 private fun detectQuantity(text: String): String? {
@@ -140,10 +132,33 @@ private fun detectQuantity(text: String): String? {
         Regex("""\b(\d+\s?[xX]\s?\d+\s?(?:tablets?|capsules?|strips?|sachets?|ampoules?|vials?))\b""", RegexOption.IGNORE_CASE),
         Regex("""\b(\d+\s?(?:tablets?|capsules?|strips?|sachets?|ampoules?|vials?))\b""", RegexOption.IGNORE_CASE),
     )
-    return patterns.asSequence()
+    val standardQuantity = patterns.asSequence()
         .mapNotNull { regex -> regex.find(text)?.groupValues?.get(1) }
         .map { it.replace(Regex("\\s+"), " ").trim() }
         .firstOrNull()
+    if (standardQuantity != null) {
+        return standardQuantity
+    }
+
+    val lines = text.lines().map { it.trim() }.filter { it.isNotBlank() }
+    lines.firstOrNull { line ->
+        Regex("""^\d+(?:\.\d+)?\s?ml$""", RegexOption.IGNORE_CASE).matches(line)
+    }?.let { return it.replace(Regex("\\s+"), " ").trim() }
+
+    lines.forEachIndexed { index, line ->
+        val normalized = line.replace(Regex("\\s+"), " ").trim()
+        if (Regex("""^\d+(?:\.\d+)?\s?ml$""", RegexOption.IGNORE_CASE).matches(normalized)) {
+            val nearby = listOfNotNull(
+                lines.getOrNull(index - 1),
+                lines.getOrNull(index + 1),
+            ).joinToString(" ").lowercase()
+            if (nearby.contains("syrup") || nearby.contains("suspension")) {
+                return normalized
+            }
+        }
+    }
+
+    return null
 }
 
 private fun detectBatch(lines: List<String>): String? {
@@ -379,6 +394,13 @@ private fun isBrandCandidate(line: String): Boolean {
         !lowered.contains("www.") &&
         !lowered.contains("contains") &&
         !lowered.contains("composition") &&
+        !lowered.contains("hydrochloride") &&
+        !lowered.contains("cetirizine") &&
+        !lowered.contains("contains") &&
+        !lowered.contains("syrup contains") &&
+        !lowered.contains("each 5 ml") &&
+        !lowered.contains("bp") &&
+        !lowered.contains("usp") &&
         !Regex("\\b\\d+(?:\\.\\d+)?\\s?(?:mg|mcg|g|ml)\\b", RegexOption.IGNORE_CASE).containsMatchIn(lowered)
 }
 
@@ -399,6 +421,10 @@ private fun brandScore(line: String): Int {
     if (Regex("\\b\\d+(?:\\.\\d+)?\\s?(?:mg|mcg|g|ml)\\b", RegexOption.IGNORE_CASE).containsMatchIn(lowered)) {
         score -= 40
     }
+    if (lowered.contains("hydrochloride")) score -= 35
+    if (lowered.contains("cetirizine")) score -= 35
+    if (lowered.contains("bp") || lowered.contains("usp")) score -= 25
+    if (lowered.contains("syrup")) score -= 12
     if (lowered.contains(",")) score -= 12
     if (line.contains("(") || line.contains(")")) score -= 4
     score -= line.length / 10
@@ -429,6 +455,7 @@ private fun genericScore(line: String): Int {
         "montelukast",
         "flunarizine",
         "ondansetron",
+        "cetirizine",
         "cranberry",
         "calcium",
         "caffeine",
@@ -458,6 +485,7 @@ private fun detectSplitGenericCandidate(lines: List<String>): String? {
             "montelukast",
             "flunarizine",
             "ondansetron",
+            "cetirizine",
             "caffeine",
             "calcium",
             "cranberry",
@@ -476,6 +504,10 @@ private fun detectSplitGenericCandidate(lines: List<String>): String? {
             return@forEachIndexed
         }
 
+        if (Regex("\\b\\d+(?:\\.\\d+)?\\s?(?:mg|mcg|g|ml)\\b", RegexOption.IGNORE_CASE).containsMatchIn(line)) {
+            return@forEachIndexed
+        }
+
         val strengthLine = normalizedLines.getOrNull(index + 1)
             ?.takeIf { Regex("\\b\\d+(?:\\.\\d+)?\\s?(?:mg|mcg|g|ml)\\b", RegexOption.IGNORE_CASE).containsMatchIn(it) }
 
@@ -485,6 +517,32 @@ private fun detectSplitGenericCandidate(lines: List<String>): String? {
     }
 
     return null
+}
+
+private fun findStrengthMatches(text: String): List<String> {
+    if (text.isBlank()) {
+        return emptyList()
+    }
+
+    val matches = Regex("\\b\\d+(?:\\.\\d+)?\\s?(?:mg|mcg|g|ml)\\b", RegexOption.IGNORE_CASE)
+        .findAll(text)
+        .map { it.value.replace(Regex("\\s+"), " ").trim() }
+        .distinct()
+        .toList()
+
+    val nonVolume = matches.filterNot { it.endsWith("ml", ignoreCase = true) }
+    return when {
+        nonVolume.isNotEmpty() -> nonVolume
+        else -> matches
+    }
+}
+
+private fun formatStrengthMatches(matches: List<String>): String? {
+    return when {
+        matches.isEmpty() -> null
+        matches.size == 1 -> matches.first()
+        else -> matches.joinToString(" + ")
+    }
 }
 
 private fun extractSequentialPacketDateFields(lines: List<String>): Map<String, String> {
