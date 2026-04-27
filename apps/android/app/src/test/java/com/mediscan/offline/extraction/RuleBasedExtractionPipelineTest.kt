@@ -167,7 +167,7 @@ class RuleBasedExtractionPipelineTest {
         assertEquals("OCT. 25", result.draft.manufactureDate)
         assertEquals("SEP. 28", result.draft.expiryDate)
         assertEquals("Mfg Lic: 33 & 114; MA No: 012-350-021", result.draft.licenseNumber)
-        assertEquals("Apex Pharmaceuticals Limited", result.draft.manufacturer)
+        assertEquals("Apex Pharma Limited", result.draft.manufacturer)
         assertEquals(null, result.draft.brandName)
     }
 
@@ -204,7 +204,7 @@ class RuleBasedExtractionPipelineTest {
         assertEquals("OCT. 25", result.draft.manufactureDate)
         assertEquals("SEP. 28", result.draft.expiryDate)
         assertEquals("Mfg Lic: 33 & 114; MA No: 012-350-021", result.draft.licenseNumber)
-        assertEquals("Apex Pharmaceuticals Limited", result.draft.manufacturer)
+        assertEquals("Apex Pharma Limited", result.draft.manufacturer)
     }
 
     @Test
@@ -330,5 +330,33 @@ class RuleBasedExtractionPipelineTest {
         assertEquals("Ondansetron USP 8 mg", result.draft.genericName)
         assertEquals("8 mg", result.draft.strength)
         assertEquals("Healthcare Pharmaceuticals Ltd.", result.draft.manufacturer)
+    }
+
+    @Test
+    fun `extract prefers manufactured by line and parses packet detail quantity`() = runBlocking {
+        val panels = listOf(
+            CapturedPanel(
+                localUri = "file://detail-panel.jpg",
+                panelType = CapturePanelType.PacketDetailSide,
+                panelName = "Packet Detail Side",
+                ocrText = """
+                    Emistat
+                    Ondansetron USP
+                    8 mg
+                    3 x 10 tablets
+                    Manufactured by
+                    Apex Pharma Limited
+                    Manufactured for
+                    Square Pharmaceuticals PLC.
+                """.trimIndent(),
+            ),
+        )
+
+        val result = pipeline.extract(panels)
+
+        assertEquals("Emistat", result.draft.brandName)
+        assertEquals("Ondansetron USP 8 mg", result.draft.genericName)
+        assertEquals("3 x 10 tablets", result.draft.quantity)
+        assertEquals("Apex Pharma Limited", result.draft.manufacturer)
     }
 }

@@ -21,17 +21,26 @@ class AssistedExtractionPipeline(
         val mergedDraft = baseline.draft.copy(
             brandName = suggestion.draft.brandName ?: baseline.draft.brandName,
             genericName = suggestion.draft.genericName ?: baseline.draft.genericName,
-            manufacturer = suggestion.draft.manufacturer ?: baseline.draft.manufacturer,
+            manufacturer = baseline.draft.manufacturer ?: suggestion.draft.manufacturer,
             strength = suggestion.draft.strength ?: baseline.draft.strength,
             activeIngredients = suggestion.draft.activeIngredients ?: baseline.draft.activeIngredients,
             confidence = suggestion.draft.confidence.ifBlank { baseline.draft.confidence },
         )
 
+        val mergedFieldSources = buildMap {
+            putAll(baseline.fieldSources)
+            suggestion.fieldSources.forEach { (key, value) ->
+                if (key != "manufacturer" || baseline.draft.manufacturer == null) {
+                    put(key, value)
+                }
+            }
+        }
+
         return baseline.copy(
             draft = mergedDraft,
             reviewHints = baseline.reviewHints +
                 suggestion.reviewHints,
-            fieldSources = baseline.fieldSources + suggestion.fieldSources,
+            fieldSources = mergedFieldSources,
             assistApplied = true,
             assistProvider = suggestion.providerLabel,
         )

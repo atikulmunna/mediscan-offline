@@ -38,6 +38,8 @@ class SampleGemmaResponseProvider {
             else -> detectStrengthFromPrompt(prompt)
         }
         val manufacturer = when {
+            normalizedPrompt.contains("apexpharmalimited") -> "Apex Pharma Limited"
+            normalizedPrompt.contains("apexpharmaceuticals") -> "Apex Pharmaceuticals Limited"
             normalizedPrompt.contains("radiantpharmaceuticals") ||
                 normalizedPrompt.contains("adiantphatmaceuticals") ||
                 normalizedPrompt.contains("adiantpharmaceuticals") -> "Radiant Pharmaceuticals Limited"

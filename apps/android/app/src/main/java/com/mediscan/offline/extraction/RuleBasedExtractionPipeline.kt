@@ -136,10 +136,14 @@ private fun detectStrength(text: String): String? {
 }
 
 private fun detectQuantity(text: String): String? {
-    return Regex("\\b(\\d+\\s?(?:tablets?|capsules?|strips?|sachets?|ampoules?|vials?))\\b", RegexOption.IGNORE_CASE)
-        .find(text)
-        ?.groupValues
-        ?.get(1)
+    val patterns = listOf(
+        Regex("""\b(\d+\s?[xX]\s?\d+\s?(?:tablets?|capsules?|strips?|sachets?|ampoules?|vials?))\b""", RegexOption.IGNORE_CASE),
+        Regex("""\b(\d+\s?(?:tablets?|capsules?|strips?|sachets?|ampoules?|vials?))\b""", RegexOption.IGNORE_CASE),
+    )
+    return patterns.asSequence()
+        .mapNotNull { regex -> regex.find(text)?.groupValues?.get(1) }
+        .map { it.replace(Regex("\\s+"), " ").trim() }
+        .firstOrNull()
 }
 
 private fun detectBatch(lines: List<String>): String? {
@@ -207,6 +211,11 @@ private fun detectLicense(lines: List<String>): String? {
 }
 
 private fun detectManufacturer(lines: List<String>): String? {
+    val explicitManufacturer = detectExplicitManufacturer(lines)
+    if (explicitManufacturer != null) {
+        return explicitManufacturer
+    }
+
     return lines
         .filter { line ->
             val lowered = line.lowercase()
@@ -230,9 +239,52 @@ private fun detectManufacturer(lines: List<String>): String? {
             if (lowered.contains("limited")) score += 6
             if (lowered.contains("pharmaceutical")) score += 5
             if (lowered.contains("healthcare")) score += 4
+            if (lowered.contains("manufactured by")) score += 12
+            if (lowered.contains("manufactured for")) score -= 8
             score += Regex("[A-Za-z]{3,}").findAll(line).count()
             score
         }
+}
+
+private fun detectExplicitManufacturer(lines: List<String>): String? {
+    val normalizedLines = lines.map { it.replace(Regex("\\s+"), " ").trim() }
+    normalizedLines.forEachIndexed { index, line ->
+        val lowered = line.lowercase()
+        if (lowered.contains("manufactured by")) {
+            val inline = line.substringAfter("manufactured by", "").trim(' ', ':', '-', '.')
+            val cleanedInline = cleanExtractedValue(inline)
+            if (!cleanedInline.isNullOrBlank() && looksLikeManufacturerValue(cleanedInline)) {
+                return cleanedInline
+            }
+
+            normalizedLines
+                .drop(index + 1)
+                .take(2)
+                .mapNotNull(::cleanExtractedValue)
+                .firstOrNull(::looksLikeManufacturerValue)
+                ?.let { return it }
+        }
+    }
+
+    normalizedLines.forEachIndexed { index, line ->
+        val lowered = line.lowercase()
+        if (lowered.contains("manufactured for")) {
+            val inline = line.substringAfter("manufactured for", "").trim(' ', ':', '-', '.')
+            val cleanedInline = cleanExtractedValue(inline)
+            if (!cleanedInline.isNullOrBlank() && looksLikeManufacturerValue(cleanedInline)) {
+                return cleanedInline
+            }
+
+            normalizedLines
+                .drop(index + 1)
+                .take(2)
+                .mapNotNull(::cleanExtractedValue)
+                .firstOrNull(::looksLikeManufacturerValue)
+                ?.let { return it }
+        }
+    }
+
+    return null
 }
 
 private fun detectActiveIngredients(lines: List<String>): String? {
@@ -596,4 +648,18 @@ private fun looksLikeLicenseValue(value: String): Boolean {
     return value.any { it.isDigit() } &&
         value.any { it.isLetter() || it.isDigit() } &&
         !value.equals("no", ignoreCase = true)
+}
+
+private fun looksLikeManufacturerValue(value: String): Boolean {
+    val lowered = value.lowercase()
+    return Regex("[A-Za-z]{3,}").findAll(value).count() >= 2 &&
+        (
+            lowered.contains("limited") ||
+                lowered.contains("ltd") ||
+                lowered.contains("pharma") ||
+                lowered.contains("pharmaceutical") ||
+                lowered.contains("healthcare")
+            ) &&
+        !lowered.contains("manufactured by") &&
+        !lowered.contains("manufactured for")
 }

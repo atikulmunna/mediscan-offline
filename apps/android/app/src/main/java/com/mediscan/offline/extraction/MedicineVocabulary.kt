@@ -49,6 +49,8 @@ private val manufacturerAliases = mapOf(
     "adiantphatmaceuticalslimited" to "Radiant Pharmaceuticals Limited",
     "adiantpharmaceuticalslimited" to "Radiant Pharmaceuticals Limited",
     "radiantphatmaceuticalslimited" to "Radiant Pharmaceuticals Limited",
+    "apexpharmalimited" to "Apex Pharma Limited",
+    "apexpharmaceuticalslimited" to "Apex Pharmaceuticals Limited",
     "beximcopharmaceuticalslimited" to "Beximco Pharmaceuticals Limited",
     "squarepharmaceuticalslimited" to "Square Pharmaceuticals Limited",
     "inceptapharmaceuticalslimited" to "Incepta Pharmaceuticals Limited",
@@ -138,7 +140,6 @@ fun correctManufacturerName(value: String?): String? {
         .replace(Regex("\\bphatmaceuticals\\b", RegexOption.IGNORE_CASE), "Pharmaceuticals")
         .replace(Regex("\\bradiant\\b", RegexOption.IGNORE_CASE), "Radiant")
         .replace(Regex("\\badiant\\b", RegexOption.IGNORE_CASE), "Radiant")
-        .replace(Regex("\\bpharma\\b", RegexOption.IGNORE_CASE), "Pharmaceuticals")
         .replace(Regex("\\btong\\b", RegexOption.IGNORE_CASE), "Tongi")
         .replace(Regex("\\s+"), " ")
         .trim()

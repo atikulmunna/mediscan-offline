@@ -84,6 +84,37 @@ class AssistedExtractionPipelineTest {
         assertEquals("gemma-stub", result.assistProvider)
     }
 
+    @Test
+    fun `keeps baseline manufacturer when assist suggests a weaker one`() = runBlocking {
+        val baseline = ExtractionResult(
+            draft = MedicineDraft(
+                manufacturer = "Apex Pharma Limited",
+                confidence = "low",
+            ),
+            fieldSources = mapOf("manufacturer" to CapturePanelType.PacketDetailSide.label),
+        )
+        val pipeline = AssistedExtractionPipeline(
+            basePipeline = FakePipeline(baseline),
+            draftAssist = FakeAssist(
+                ExtractionAssistSuggestion(
+                    draft = MedicineDraft(
+                        manufacturer = "Square Pharmaceuticals Limited",
+                        confidence = "medium",
+                    ),
+                    fieldSources = mapOf("manufacturer" to "Gemma Assist"),
+                    providerLabel = "gemma-stub",
+                ),
+            ),
+            shouldAssist = { true },
+        )
+
+        val result = pipeline.extract(emptyList())
+
+        assertEquals("Apex Pharma Limited", result.draft.manufacturer)
+        assertEquals(CapturePanelType.PacketDetailSide.label, result.fieldSources["manufacturer"])
+        assertEquals(true, result.assistApplied)
+    }
+
     private class FakePipeline(
         private val result: ExtractionResult,
     ) : ExtractionPipeline {
