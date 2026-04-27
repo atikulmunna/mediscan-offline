@@ -290,6 +290,9 @@ class RuleBasedExtractionPipelineTest {
                     35.00
                     Mfg. Lic. No.: 33 & 114
                     MA No.:012-350-021
+                    Mfg. Date :
+                    Manufactured by
+                    8'940001"275019
                 """.trimIndent(),
             ),
         )

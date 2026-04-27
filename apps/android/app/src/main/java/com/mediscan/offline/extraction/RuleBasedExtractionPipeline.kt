@@ -438,21 +438,24 @@ private fun detectSplitGenericCandidate(lines: List<String>): String? {
 private fun extractSequentialPacketDateFields(lines: List<String>): Map<String, String> {
     val normalizedLines = lines.map { it.replace(Regex("\\s+"), " ").trim() }
     val labelEntries = normalizedLines.mapIndexedNotNull { index, line ->
-        when {
-            Regex("""batch\s*(?:no\.?)?""", RegexOption.IGNORE_CASE).containsMatchIn(line) -> index to "batch"
-            Regex("""mfg\.?\s*date""", RegexOption.IGNORE_CASE).containsMatchIn(line) -> index to "mfg"
-            Regex("""exp\.?\s*date""", RegexOption.IGNORE_CASE).containsMatchIn(line) ||
-                Regex("""expiry\s*date""", RegexOption.IGNORE_CASE).containsMatchIn(line) -> index to "exp"
-            Regex("""mrp\b""", RegexOption.IGNORE_CASE).containsMatchIn(line) -> index to "mrp"
-            else -> null
-        }
+        packetOperationalLabelKey(line)?.let { index to it }
     }
 
     if (labelEntries.count { it.second in setOf("batch", "mfg", "exp") } < 3) {
         return emptyMap()
     }
 
-    val lastLabelIndex = labelEntries.maxOf { it.first }
+    val firstLabelIndex = labelEntries.first().first
+    var lastLabelIndex = firstLabelIndex
+    while (lastLabelIndex + 1 < normalizedLines.size) {
+        val nextLine = normalizedLines[lastLabelIndex + 1]
+        if (packetOperationalLabelKey(nextLine) != null || looksLikePacketLabelContinuation(nextLine)) {
+            lastLabelIndex += 1
+        } else {
+            break
+        }
+    }
+
     val values = normalizedLines
         .drop(lastLabelIndex + 1)
         .takeWhile { !looksLikePacketSectionBoundary(it) }
@@ -480,6 +483,22 @@ private fun extractSequentialPacketDateFields(lines: List<String>): Map<String, 
     }
 
     return extracted
+}
+
+private fun packetOperationalLabelKey(line: String): String? {
+    return when {
+        Regex("""batch\s*(?:no\.?)?""", RegexOption.IGNORE_CASE).containsMatchIn(line) -> "batch"
+        Regex("""mfg\.?\s*date""", RegexOption.IGNORE_CASE).containsMatchIn(line) -> "mfg"
+        Regex("""exp\.?\s*date""", RegexOption.IGNORE_CASE).containsMatchIn(line) ||
+            Regex("""expiry\s*date""", RegexOption.IGNORE_CASE).containsMatchIn(line) -> "exp"
+        Regex("""mrp\b""", RegexOption.IGNORE_CASE).containsMatchIn(line) -> "mrp"
+        else -> null
+    }
+}
+
+private fun looksLikePacketLabelContinuation(value: String): Boolean {
+    val lowered = value.lowercase()
+    return lowered.contains("including vat")
 }
 
 private fun extractLabeledValue(
