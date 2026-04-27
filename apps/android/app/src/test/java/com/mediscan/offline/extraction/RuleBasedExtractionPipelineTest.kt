@@ -386,4 +386,35 @@ class RuleBasedExtractionPipelineTest {
         assertEquals("5 mg", result.draft.strength)
         assertEquals("60 ml", result.draft.quantity)
     }
+
+    @Test
+    fun `extract handles real alatrol packet detail ocr layout`() = runBlocking {
+        val panels = listOf(
+            CapturedPanel(
+                localUri = "file://alatrol-real.jpg",
+                panelType = CapturePanelType.PacketDetailSide,
+                panelName = "Packet Detail Side",
+                ocrText = """
+                    Alatrol
+                    Cetirnizine Hydrochloride BP
+                    Composition
+                    Each 5 ml syrup contains
+                    Cetirizine Hydrochloride BP 5 mg.
+                    Reliefof
+                    Runny & ltchy Nose
+                    Sneezing
+                    Itchy Skin Rash
+                    60 ml
+                    Syrup
+                """.trimIndent(),
+            ),
+        )
+
+        val result = pipeline.extract(panels)
+
+        assertEquals("Alatrol", result.draft.brandName)
+        assertEquals("Cetirizine Hydrochloride BP 5 mg", result.draft.genericName)
+        assertEquals("5 mg", result.draft.strength)
+        assertEquals("60 ml", result.draft.quantity)
+    }
 }

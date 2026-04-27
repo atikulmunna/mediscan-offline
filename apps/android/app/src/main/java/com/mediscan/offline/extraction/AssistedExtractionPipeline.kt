@@ -30,19 +30,42 @@ class AssistedExtractionPipeline(
         val mergedFieldSources = buildMap {
             putAll(baseline.fieldSources)
             suggestion.fieldSources.forEach { (key, value) ->
-                if (key != "manufacturer" || baseline.draft.manufacturer == null) {
+                val shouldKeepBaseline = when (key) {
+                    "brand_name" -> sameValue(baseline.draft.brandName, suggestion.draft.brandName)
+                    "generic_name" -> sameValue(baseline.draft.genericName, suggestion.draft.genericName)
+                    "strength" -> sameValue(baseline.draft.strength, suggestion.draft.strength)
+                    "manufacturer" -> baseline.draft.manufacturer != null
+                    else -> false
+                }
+                if (!shouldKeepBaseline) {
                     put(key, value)
                 }
             }
         }
 
+        val mergedReviewHints = (baseline.reviewHints + suggestion.reviewHints)
+            .filterNot { hint ->
+                (mergedDraft.brandName != null && hint.contains("Brand name missing", ignoreCase = true)) ||
+                    (mergedDraft.genericName != null && hint.contains("Generic name missing", ignoreCase = true)) ||
+                    (mergedDraft.batchNumber != null && hint.contains("Batch number missing", ignoreCase = true)) ||
+                    (mergedDraft.expiryDate != null && hint.contains("Expiry date missing", ignoreCase = true)) ||
+                    (mergedDraft.manufactureDate != null && hint.contains("Manufacture date missing", ignoreCase = true)) ||
+                    (mergedDraft.strength != null && hint.contains("Strength missing", ignoreCase = true))
+            }
+
         return baseline.copy(
             draft = mergedDraft,
-            reviewHints = baseline.reviewHints +
-                suggestion.reviewHints,
+            reviewHints = mergedReviewHints,
             fieldSources = mergedFieldSources,
             assistApplied = true,
             assistProvider = suggestion.providerLabel,
         )
     }
+}
+
+private fun sameValue(left: String?, right: String?): Boolean {
+    if (left.isNullOrBlank() || right.isNullOrBlank()) {
+        return false
+    }
+    return normalizeToken(left) == normalizeToken(right)
 }

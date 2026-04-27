@@ -115,6 +115,58 @@ class AssistedExtractionPipelineTest {
         assertEquals(true, result.assistApplied)
     }
 
+    @Test
+    fun `keeps baseline field source and removes stale missing hints when assist matches value`() = runBlocking {
+        val baseline = ExtractionResult(
+            draft = MedicineDraft(
+                brandName = "Alatrol",
+                genericName = "Cetirizine Hydrochloride BP 5 mg",
+                strength = "5 mg",
+                confidence = "low",
+            ),
+            reviewHints = listOf(
+                "Brand name missing: verify the strip or packet detail side.",
+                "Generic name missing: review the strip text manually.",
+                "Strength missing: verify the strip or detail side.",
+            ),
+            fieldSources = mapOf(
+                "brand_name" to CapturePanelType.PacketDetailSide.label,
+                "generic_name" to CapturePanelType.PacketDetailSide.label,
+                "strength" to CapturePanelType.PacketDetailSide.label,
+            ),
+        )
+        val pipeline = AssistedExtractionPipeline(
+            basePipeline = FakePipeline(baseline),
+            draftAssist = FakeAssist(
+                ExtractionAssistSuggestion(
+                    draft = MedicineDraft(
+                        brandName = "Alatrol",
+                        genericName = "Cetirizine Hydrochloride BP 5 mg",
+                        strength = "5 mg",
+                        confidence = "medium",
+                    ),
+                    reviewHints = listOf("Brand candidate was recovered from mixed OCR text."),
+                    fieldSources = mapOf(
+                        "brand_name" to "Gemma Assist",
+                        "generic_name" to "Gemma Assist",
+                        "strength" to "Gemma Assist",
+                    ),
+                    providerLabel = "gemma-stub",
+                ),
+            ),
+            shouldAssist = { true },
+        )
+
+        val result = pipeline.extract(emptyList())
+
+        assertEquals(CapturePanelType.PacketDetailSide.label, result.fieldSources["brand_name"])
+        assertEquals(CapturePanelType.PacketDetailSide.label, result.fieldSources["generic_name"])
+        assertEquals(CapturePanelType.PacketDetailSide.label, result.fieldSources["strength"])
+        assertTrue(result.reviewHints.none { it.contains("Brand name missing") })
+        assertTrue(result.reviewHints.none { it.contains("Generic name missing") })
+        assertTrue(result.reviewHints.none { it.contains("Strength missing") })
+    }
+
     private class FakePipeline(
         private val result: ExtractionResult,
     ) : ExtractionPipeline {
